@@ -73,6 +73,7 @@ namespace RainMeadow
             On.ProcessManager.CueAchievement += ProcessManager_CueAchievement;
 
             On.GlobalRain.InitDeathRain += GlobalRain_InitDeathRain;
+            ExpeditionHooks();
         }
 
         private void RainWorldGame_RawUpdate1(ILContext il)

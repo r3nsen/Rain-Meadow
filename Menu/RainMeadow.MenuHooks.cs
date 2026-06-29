@@ -1,9 +1,14 @@
 using HarmonyLib;
+
 using Menu;
+
 using Mono.Cecil.Cil;
+
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
+
 using RainMeadow.UI;
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,6 +16,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+
 using UnityEngine;
 
 namespace RainMeadow
@@ -27,7 +33,7 @@ namespace RainMeadow
             IntroRollReplacement.OnEnable();
             IL.Menu.Menu.Update += IL_Menu_Update;
             On.Menu.Menu.SelectNewObject += On_Menu_SelectNewObject;
-            
+
             //On.Menu.InputOptionsMenu.ctor += InputOptionsMenu_ctor;
 
             On.ProcessManager.RequestMainProcessSwitch_ProcessID += ProcessManager_RequestMainProcessSwitch_ProcessID;
@@ -618,12 +624,22 @@ namespace RainMeadow
 
         private void ProcessManager_PostSwitchMainProcess(On.ProcessManager.orig_PostSwitchMainProcess orig, ProcessManager self, ProcessManager.ProcessID ID)
         {
+            r3n.Log($"ProcessManager_PostSwitchMainProcess - ProcessID: {ID}");
             if (ID == Ext_ProcessID.LobbySelectMenu) self.currentMainLoop = new LobbySelectMenu(self);
             if (ID == Ext_ProcessID.LobbyCreateMenu) self.currentMainLoop = new LobbyCreateMenu(self);
             if (ID == Ext_ProcessID.ArenaLobbyMenu) self.currentMainLoop = new ArenaOnlineLobbyMenu(self);
             if (ID == Ext_ProcessID.MeadowMenu) self.currentMainLoop = new MeadowMenu(self);
-            if (ID == Ext_ProcessID.StoryMenu) self.currentMainLoop = new StoryOnlineMenu(self);
+            if (ID == Ext_ProcessID.StoryMenu)
+            {
+                r3n.Log($"-- story");
+                self.currentMainLoop = new StoryOnlineMenu(self);
+            }
             if (ID == Ext_ProcessID.MeadowCredits) self.currentMainLoop = new MeadowCredits(self);
+            if (ID == Ext_ProcessID.ExpeditionMenu)
+            {
+                r3n.Log($"-- expedition");
+                self.currentMainLoop = new ExpeditionOnlineMenu(self);
+            }
 
             if (ID == ProcessManager.ProcessID.IntroRoll)
             {
@@ -652,7 +668,7 @@ namespace RainMeadow
                 self.manager.ShowDialog(new DialogNotify(self.Translate("Rain Meadow failed to start"), self.manager, null));
                 return;
             }
-            
+
             SpecialEvents.GetActiveEvent()?.UpdateLoginMessage(self);
 
             // we might get here from quitting out of game
