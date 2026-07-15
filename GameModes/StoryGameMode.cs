@@ -244,6 +244,8 @@ namespace RainMeadow
                     }
                 }
             }
+            //if(OnlineManager.lobby.clientSettings[(OnlinePlayer)null].inGame)
+            //    OnlineManager.lobby.clientSettings[(OnlinePlayer)null].GetData<StoryClientSettingsData>();
         }
 
         public override void NewResourceOwner(OnlineResource resource, OnlinePlayer? oldOwner, OnlinePlayer? newOwner)
@@ -266,7 +268,7 @@ namespace RainMeadow
         {
             base.ResourceAvailable(onlineResource);
             if (onlineResource is Lobby lobby)
-            {
+            {                
                 lobby.AddData(new StoryLobbyData());
             }
         }
@@ -286,6 +288,7 @@ namespace RainMeadow
             {
                 abstractCreature = new AbstractCreature(self.world, StaticWorld.GetCreatureTemplate("Slugcat"), null, location, new EntityID(-1, i));
                 abstractCreature.state = new PlayerState(abstractCreature, i, avatarSettings[i].playingAs, false) { isPup = avatarSettings[i].fakePup };
+                r3n.Log($"- SpawnAvatar - creature state: {abstractCreature.state}, {abstractCreature.state.GetType()}, {abstractCreature.state is null}");
                 self.world.GetAbstractRoom(abstractCreature.pos.room).AddEntity(abstractCreature);
                 self.session.AddPlayer(abstractCreature);
 

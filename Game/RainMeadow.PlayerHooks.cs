@@ -1458,6 +1458,10 @@ public partial class RainMeadow
                 self.Blink(2); //Vanilla only avoids this issue because sleepCounter also closes eyes directly using Blink(). We're not using sleepCounter, so Spearmaster needs this insomnia cure.
             }
         }
+       // r3n.Log($"{OnlineManager.lobby != null} && !({ModManager.MSC} && {self.SlugCatClass} == {MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Saint} && ({self.KarmaCap >= 9} || ({self?.room?.game?.session} is ArenaGameSession && {self.room?.game?.GetArenaGameSession?.arenaSitting?.gameTypeSetup?.gameType} == {DLCSharedEnums.GameTypeID.Challenge} && {self.room?.game?.GetArenaGameSession?.arenaSitting?.gameTypeSetup?.challengeMeta?.ascended}))) && {SpecialEvents.EventActiveInLobby<SpecialEvents.Anniversary>()}");
+
+     //   r3n.Log($" - self.room {self.room} game {self.room?.game} GetArenaGameSession {self.room?.game?.GetArenaGameSession} arenaSitting {self.room?.game?.GetArenaGameSession?.arenaSitting} gameTypeSetup {self.room?.game?.GetArenaGameSession?.arenaSitting?.gameTypeSetup} gameType {self.room?.game?.GetArenaGameSession?.arenaSitting?.gameTypeSetup?.gameType}");
+     //   r3n.Log($" - self.room {self.room} game {self.room?.game} GetArenaGameSession {self.room?.game?.GetArenaGameSession} arenaSitting {self.room?.game?.GetArenaGameSession?.arenaSitting} gameTypeSetup {self.room?.game?.GetArenaGameSession?.arenaSitting?.gameTypeSetup} challengeMeta {self.room?.game?.GetArenaGameSession?.arenaSitting?.gameTypeSetup?.challengeMeta} ascended {self.room?.game?.GetArenaGameSession?.arenaSitting?.gameTypeSetup?.challengeMeta?.ascended}");
 
         if (OnlineManager.lobby != null && !(ModManager.MSC &&
             self.SlugCatClass == MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Saint &&
@@ -1784,29 +1788,34 @@ public partial class RainMeadow
 
     private void Player_AddFood(On.Player.orig_AddFood orig, Player self, int add)
     {
+        r3n.Log("Player_AddFood");
         if (OnlineManager.lobby is null || !sUpdateFood)
         {
+            r3n.Log(" - Player_AddFood lobby is null");
             orig(self, add);
             return;
         }
 
         if (!OnlinePhysicalObject.map.TryGetValue(self.abstractPhysicalObject, out var onlineEntity))
         {
+            r3n.Log($" - Player_AddFood - no online entity: {self.abstractPhysicalObject}.");
             RainMeadow.Error("Player doesn't have OnlineEntity counterpart!!");
             orig(self, add);
             return;
         }
 
         if (!onlineEntity.isMine) return;
+        r3n.Log(" - Player_AddFood - is mine");
 
         var state = (isStoryMode(out _) && !self.isNPC) ? (PlayerState)self.abstractCreature.world.game.Players[0].state : (PlayerState)self.State;
+        r3n.Log($"Player_AddFood - state: {state}");
         var origFood = state.foodInStomach * 4 + state.quarterFoodPoints;
 
         orig(self, add);
 
         if (self.isNPC) return;
         if (!OnlineManager.lobby.isOwner && OnlineManager.lobby.gameMode is StoryGameMode)
-        {
+        { 
             var newFood = state.foodInStomach * 4 + state.quarterFoodPoints;
             if (newFood != origFood) OnlineManager.lobby.owner.InvokeRPC(StoryRPCs.ChangeFood, (short)(newFood - origFood));
         }

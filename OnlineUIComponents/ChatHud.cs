@@ -31,13 +31,22 @@ namespace RainMeadow
         public ChatHud(HUD.HUD hud, RoomCamera camera) : base(hud)
         {
             textPrompt = hud.textPrompt;
+            r3n.Log($"textPrompt: {hud.textPrompt}");
+            r3n.Log($"hud.rainWorld.inGameTranslator: {hud.rainWorld.inGameTranslator}");
+            r3n.Log($"RainMeadow.rainMeadowOptions.ChatButtonKey.Value: {RainMeadow.rainMeadowOptions.ChatButtonKey.Value}");
+            r3n.Log($"RainMeadow.rainMeadowOptions.ChatLogKey.Value: {RainMeadow.rainMeadowOptions.ChatLogKey.Value}");
             this.camera = camera;
             game = camera.game;
 
             ChatLogManager.Subscribe(this);
             if (!ChatLogManager.shownChatTutorial)
             {
-                hud.textPrompt.AddMessage(hud.rainWorld.inGameTranslator.Translate("Press '") + (RainMeadow.rainMeadowOptions.ChatButtonKey.Value) + hud.rainWorld.inGameTranslator.Translate("' to chat, press '") + (RainMeadow.rainMeadowOptions.ChatLogKey.Value) + hud.rainWorld.inGameTranslator.Translate("' to toggle the chat log"), 60, 320, true, true);
+                hud.textPrompt.AddMessage(
+                    hud.rainWorld.inGameTranslator.Translate("Press '") + 
+                    (RainMeadow.rainMeadowOptions.ChatButtonKey.Value) + 
+                    hud.rainWorld.inGameTranslator.Translate("' to chat, press '") + 
+                    (RainMeadow.rainMeadowOptions.ChatLogKey.Value) + 
+                    hud.rainWorld.inGameTranslator.Translate("' to toggle the chat log"), 60, 320, true, true);
                 ChatLogManager.shownChatTutorial = true;
             }
 

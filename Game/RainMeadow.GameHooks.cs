@@ -250,9 +250,15 @@ namespace RainMeadow
 
         private string Options_GetSaveFileName_SavOrExp(On.Options.orig_GetSaveFileName_SavOrExp orig, Options self)
         {
+            r3n.Log("Options_GetSaveFileName_SavOrExp");
             if (OnlineManager.lobby == null)
             {
                 return orig(self);
+            }
+
+            if (ModManager.Expedition && self.saveSlot < 0)
+            {
+                return "online_exp" + Math.Abs(self.saveSlot);
             }
 
             if (self.saveSlot != 0)
@@ -412,59 +418,67 @@ namespace RainMeadow
 
         private void RainWorldGame_Update1(On.RainWorldGame.orig_Update orig, RainWorldGame self)
         {
-            if (OnlineManager.lobby?.gameMode is MeadowGameMode)
+            try
             {
-                // fast travel init means save-and-restart on load, which uses player[0]
-                if (self.manager.menuSetup.FastTravelInitCondition)
+                if (OnlineManager.lobby?.gameMode is MeadowGameMode)
                 {
-                    self.manager.menuSetup.startGameCondition = ProcessManager.MenuSetup.StoryGameInitCondition.New;
-                    self.manager.blackDelay = 0;
-                }
-            }
-
-            if (isStoryMode(out var story))
-            {
-                // synchronize food between all local avatars
-                PlayerState? first_state = story.avatars[0]?.abstractCreature?.state as PlayerState;
-                Player? first_player = story.avatars[0]?.abstractCreature?.realizedCreature as Player;
-                if (story.lobby.isOwner)
-                {
-                    foreach (OnlineCreature avatar in story.avatars)
+                    // fast travel init means save-and-restart on load, which uses player[0]
+                    if (self.manager.menuSetup.FastTravelInitCondition)
                     {
-                        if (first_state is not null)
+                        self.manager.menuSetup.startGameCondition = ProcessManager.MenuSetup.StoryGameInitCondition.New;
+                        self.manager.blackDelay = 0;
+                    }
+                }
+
+                if (isStoryMode(out var story))
+                {
+                    // synchronize food between all local avatars
+                  //  r3n.Log($"story.avatars: {story.avatars?.ToString() ?? "null"} - count: {story.avatars?.Count}");
+                    PlayerState? first_state = story.avatars[0]?.abstractCreature?.state as PlayerState;
+                    Player? first_player = story.avatars[0]?.abstractCreature?.realizedCreature as Player;
+                    if (story.lobby.isOwner)
+                    {
+                        foreach (OnlineCreature avatar in story.avatars)
                         {
-                            if (avatar?.abstractCreature?.state is PlayerState state)
+                            if (first_state is not null)
                             {
-                                state.foodInStomach = first_state.foodInStomach;
-                                state.quarterFoodPoints = first_state.quarterFoodPoints;
+                                if (avatar?.abstractCreature?.state is PlayerState state)
+                                {
+                                    state.foodInStomach = first_state.foodInStomach;
+                                    state.quarterFoodPoints = first_state.quarterFoodPoints;
+                                }
                             }
-                        }
 
 
-                        if (avatar?.abstractCreature?.realizedCreature is Player p && first_player is not null)
-                        {
-                            p.mushroomCounter = first_player.mushroomCounter;
+                            if (avatar?.abstractCreature?.realizedCreature is Player p && first_player is not null)
+                            {
+                                p.mushroomCounter = first_player.mushroomCounter;
+                            }
                         }
                     }
                 }
-            }
 
-            orig(self);
+                orig(self);
 
-            if (OnlineManager.lobby?.gameMode is MeadowGameMode mgm)
-            {
-                MeadowProgression.progressionData.currentCharacterProgress.timePlayed += 1000 / self.framesPerSecond;
-                // every 5 minutes
-                if (self.manager.upcomingProcess == null && self.clock % (5 * 60 * 40) == 0)
+                if (OnlineManager.lobby?.gameMode is MeadowGameMode mgm)
                 {
-                    MeadowProgression.progressionData.currentCharacterProgress.saveLocation = mgm.avatars[0].apo.pos;
-                    MeadowProgression.AutosaveProgression();
+                    MeadowProgression.progressionData.currentCharacterProgress.timePlayed += 1000 / self.framesPerSecond;
+                    // every 5 minutes
+                    if (self.manager.upcomingProcess == null && self.clock % (5 * 60 * 40) == 0)
+                    {
+                        MeadowProgression.progressionData.currentCharacterProgress.saveLocation = mgm.avatars[0].apo.pos;
+                        MeadowProgression.AutosaveProgression();
+                    }
+                }
+                if (OnlineManager.lobby != null)
+                {
+                    string cl = OnlineManager.CheatsAllowed ? "" : "\n" + Utils.Translate("Cheats are disabled in this lobby.");
+                    self.devToolsLabel.text = self.devToolsLabel.text + $" | Rain Meadow {RainMeadow.MeadowVersionStr} ({MatchmakingManager.currentDomain.value}){cl}";
                 }
             }
-            if (OnlineManager.lobby != null)
+            catch (Exception e)
             {
-                string cl = OnlineManager.CheatsAllowed ? "" : "\n" + Utils.Translate("Cheats are disabled in this lobby.");
-                self.devToolsLabel.text = self.devToolsLabel.text + $" | Rain Meadow {RainMeadow.MeadowVersionStr} ({MatchmakingManager.currentDomain.value}){cl}";
+                r3n.Log($"ERROR: {e.Message} {e.StackTrace} {e.InnerException}");
             }
         }
 

@@ -76,7 +76,8 @@ namespace RainMeadow
             public float maximumRippleLevel;
 
             [OnlineField(nullable = true)]
-            public MenuSaveStateState? currentMenuSaveState;  
+            public MenuSaveStateState? currentMenuSaveState;
+            
 
             public State() { }
 

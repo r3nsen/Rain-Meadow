@@ -1,4 +1,7 @@
 using HUD;
+
+using Kittehface.Framework20;
+
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
@@ -1368,7 +1371,7 @@ namespace RainMeadow
 
                 if (MatchmakingManager.currentInstance.canSendChatMessages)
                     self.AddPart(new ChatHud(self, cam));
-            }
+            }           
         }
         private void FoodMeter_TrySpawnPupBars_LobbyClient(On.HUD.FoodMeter.orig_TrySpawnPupBars orig, FoodMeter self)
         {
@@ -1421,6 +1424,7 @@ namespace RainMeadow
                     if (OnlineManager.lobby != null && isStoryMode(out var story))
                     {
                         if (!OnlineManager.lobby.isOwner) return;
+                        //r3n.Log($"story: {story} - pups: {story?.pups}");
                         story.pups.Clear();
                     }
                 });
@@ -1777,11 +1781,13 @@ namespace RainMeadow
         private void SaveStateHandler(PlayerProgression self, StoryGameMode storyGameMode, RainWorldGame game)
         {
             RainMeadow.Debug("story: found loaded game state");
+            r3n.Log(" -- SaveStateHandler");
             // Begin story meadow insertion
             inVoidSea = false;
             if (OnlineManager.lobby.isOwner)
             {
                 storyGameMode.saveStateString = SaveStateToString(self.currentSaveState);
+                r3n.Log($" -- SaveStateHandler - storyGameMode.saveStateString: {storyGameMode.saveStateString}");
             }
             else
             {
@@ -1837,16 +1843,20 @@ namespace RainMeadow
         }
         private SaveState PlayerProgression_GetOrInitiateSaveState(On.PlayerProgression.orig_GetOrInitiateSaveState orig, PlayerProgression self, SlugcatStats.Name saveStateNumber, RainWorldGame game, ProcessManager.MenuSetup setup, bool saveAsDeathOrQuit)
         {
+            r3n.Log("PlayerProgression_GetOrInitiateSaveState");
             if (OnlineManager.lobby == null)
             {
                 return orig(self, saveStateNumber, game, setup, saveAsDeathOrQuit);
             }
+            r3n.Log("OnlineManager.lobby != null");
+            r3n.Log($"RainMeadow.isStoryMode: {RainMeadow.isStoryMode(out _)}");
             if (RainMeadow.isStoryMode(out var storyGameMode))
             {
+                r3n.Log("isStoryMode");
                 RainMeadow.Debug("story: initiating save state!");
                 if (self.currentSaveState == null && self.starvedSaveState != null && game != null && (!ModManager.MSC || game.manager.artificerDreamNumber == -1))
                 {
-                    Custom.Log("LOADING STARVED STATE");
+                    r3n.Log("LOADING STARVED STATE");
                     self.currentSaveState = self.starvedSaveState;
                     self.currentSaveState.deathPersistentSaveData.winState.ResetLastShownValues();
                     self.starvedSaveState = null;
@@ -1893,13 +1903,226 @@ namespace RainMeadow
                 return self.currentSaveState;
 
             }
+            
             return orig(self, saveStateNumber, game, setup, saveAsDeathOrQuit);
         }
 
         private bool PlayerProgression_SaveToDisk(On.PlayerProgression.orig_SaveToDisk orig, PlayerProgression self, bool saveCurrentState, bool saveMaps, bool saveMiscProg)
         {
-            if (isStoryMode(out var storyGameMode) && !storyGameMode.saveToDisk) return false;
-            return orig(self, saveCurrentState, saveMaps, saveMiscProg);
+            StoryGameMode storyGameModee;
+            r3n.Log($"PlayerProgression_SaveToDisk: isStoryMode: {isStoryMode(out storyGameModee)} - isStoryMode && saveToDisk: {(!storyGameModee?.saveToDisk)}");
+            r3n.Log($"self.currentSaveState.saveStateNumber: {self?.currentSaveState?.saveStateNumber}");
+            if ((isStoryMode(out var storyGameMode) && !storyGameMode.saveToDisk)) return false;
+            return aaa(self, saveCurrentState, saveMaps, saveMiscProg);
+        }
+        bool aaa(PlayerProgression self, bool saveCurrentState, bool saveMaps, bool saveMiscProg)
+        {
+            r3n.Log(" -- !! Saving data");
+            int c = 0;
+            bool flag = ModManager.MMF == self.onLoadMMFState && ModManager.MSC == self.onLoadMSCState && ModManager.Expedition == self.onLoadExpeditionState && ModManager.JollyCoop == self.onLoadJollyState && ModManager.Watcher == self.onLoadWatcherState;
+            r3n.Log($" -- flag {c++}: {flag}");
+            for (int i = 0; i < ModManager.InstalledMods.Count; i++)
+            {
+                if (!self.onLoadEnabledModsState.ContainsKey(ModManager.InstalledMods[i].id) || self.onLoadEnabledModsState[ModManager.InstalledMods[i].id] != ModManager.InstalledMods[i].enabled)
+                {
+                    flag = false;
+                    break;
+                }
+            }
+            r3n.Log($" -- flag {c++}: {flag}");
+
+            foreach (string enabledMod in self.rainWorld.options.enabledMods)
+            {
+                if (!self.onLoadEnabledModsState.ContainsKey(enabledMod) || !self.onLoadEnabledModsState[enabledMod])
+                {
+                    flag = false;
+                    break;
+                }
+            }
+            r3n.Log($" -- flag {c++}: {flag}");
+            foreach (KeyValuePair<string, bool> item in self.onLoadEnabledModsState)
+            {
+                bool flag2 = false;
+                for (int j = 0; j < ModManager.InstalledMods.Count; j++)
+                {
+                    if (ModManager.InstalledMods[j].id == item.Key && ModManager.InstalledMods[j].enabled == item.Value)
+                    {
+                        flag2 = true;
+                        break;
+                    }
+                }
+
+                if (!flag2)
+                {
+                    flag = false;
+                    break;
+                }
+            }
+            r3n.Log($" -- flag {c++}: {flag}");
+            if (!flag)
+            {
+                r3n.Log($" -- !! NOT SAVING BECAUSE SAVE DATA IN MEMORY IS OUT OF SYNC AND INCOMPATIBLE WITH CURRENT GAME STATE!");
+                r3n.Log($" -- MSC: {ModManager.MSC} :: {self.onLoadMSCState}");
+                r3n.Log($" -- MMF: {ModManager.MMF} :: {self.onLoadMMFState}");
+                r3n.Log($" -- Jolly: {ModManager.JollyCoop} :: {self.onLoadJollyState}");
+                r3n.Log($" -- Expedition: {ModManager.Expedition} :: {self.onLoadExpeditionState}");
+                r3n.Log($" -- Watcher: {ModManager.Watcher} :: {self.onLoadWatcherState}");
+                r3n.Log(" -- Current mods: ");
+                for (int k = 0; k < ModManager.InstalledMods.Count; k++)
+                {
+                    r3n.Log($" -- {ModManager.InstalledMods[k].id} :: {ModManager.InstalledMods[k].enabled.ToString()}");
+                }
+
+                r3n.Log(" -- In-memory mods: ");
+                foreach (KeyValuePair<string, bool> item2 in self.onLoadEnabledModsState)
+                {
+                    r3n.Log($" -- {item2.Key} :: {item2.Value}");
+                }
+
+                return false;
+            }
+
+            if (!saveCurrentState && !saveMaps && !saveMiscProg)
+            {
+                r3n.Log(" -- SaveToDisk without anything to save.");
+                return true;
+            }
+
+            r3n.Log($" -- SAVE PROGRESSION saveCurrentState: { saveCurrentState.ToString()} saveMaps: {saveMaps.ToString()} saveMiscProg: {saveMiscProg.ToString()}");
+            bool flag3 = false;
+            List<string> list = new List<string>();
+            List<string> list2 = new List<string>();
+            bool flag4 = false;
+            if (saveMaps)
+            {
+                self.miscProgressionData.SaveDiscoveredShelters(ref self.tempSheltersDiscovered);
+            }
+
+            self.tempSheltersDiscovered.Clear();
+            string[] progLinesFromMemory = self.GetProgLinesFromMemory();
+            string text = "";
+            for (int l = 0; l < progLinesFromMemory.Length; l++)
+            {
+                bool flag5 = false;
+                string[] array = Regex.Split(progLinesFromMemory[l], "<progDivB>");
+                if (array[0] == "SAVE STATE")
+                {
+                    if (saveCurrentState && self.currentSaveState != null && BackwardsCompatibilityRemix.ParseSaveNumber(array[1]) == self.currentSaveState.saveStateNumber)
+                    {
+                        text = text + "SAVE STATE<progDivB>" + self.currentSaveState.SaveToString();
+                        r3n.Log($" -- successfully saved state {self.currentSaveState.saveStateNumber} to disc");
+                        flag3 = true;
+                    }
+                    else
+                    {
+                        text += progLinesFromMemory[l];
+                    }
+
+                    flag5 = true;
+                }
+                else if (array[0] == "MAP")
+                {
+                    if (ModManager.ModdedRegionsEnabled || !saveMaps || !self.mapDiscoveryTextures.ContainsKey(array[1]) || self.mapDiscoveryTextures[array[1]] == null)
+                    {
+                        text += progLinesFromMemory[l];
+                    }
+                    else
+                    {
+                        text = text + "MAP<progDivB>" + array[1] + "<progDivB>" + Convert.ToBase64String(self.mapDiscoveryTextures[array[1]].EncodeToPNG());
+                        if (self.mapLastUpdatedTime.ContainsKey(array[1]))
+                        {
+                            text = text + "<progDivA>MAPUPDATE<progDivB>" + array[1] + string.Format(System.Globalization.CultureInfo.InvariantCulture, "<progDivB>{0}", self.mapLastUpdatedTime[array[1]]);
+                        }
+                    }
+
+                    flag5 = true;
+                    list.Add(array[1]);
+                }
+                else if (array[0].Length > 4 && array[0].Substring(0, 4) == "MAP_")
+                {
+                    if (array[0].Substring(4, array[0].Length - 4) != self.PlayingAsSlugcat.value)
+                    {
+                        text += progLinesFromMemory[l];
+                        flag5 = true;
+                    }
+                    else
+                    {
+                        if (!ModManager.ModdedRegionsEnabled || !saveMaps || !self.mapDiscoveryTextures.ContainsKey(array[1]) || self.mapDiscoveryTextures[array[1]] == null)
+                        {
+                            text += progLinesFromMemory[l];
+                        }
+                        else
+                        {
+                            text = text + "MAP_" + self.PlayingAsSlugcat.value + "<progDivB>" + array[1] + "<progDivB>" + Convert.ToBase64String(self.mapDiscoveryTextures[array[1]].EncodeToPNG());
+                            if (self.mapLastUpdatedTime.ContainsKey(array[1]))
+                            {
+                                text = text + "<progDivA>MAPUPDATE_" + self.PlayingAsSlugcat.value + "<progDivB>" + array[1] + string.Format(System.Globalization.CultureInfo.InvariantCulture, "<progDivB>{0}", self.mapLastUpdatedTime[array[1]]);
+                            }
+                        }
+
+                        flag5 = true;
+                        list2.Add(array[1]);
+                    }
+                }
+                else if (array[0] == "MISCPROG")
+                {
+                    text = (saveMiscProg ? (text + "MISCPROG<progDivB>" + self.miscProgressionData.ToString()) : (text + progLinesFromMemory[l]));
+                    flag5 = true;
+                    flag4 = true;
+                }
+
+                if (flag5)
+                {
+                    text += "<progDivA>";
+                }
+            }
+
+            if (saveCurrentState && !flag3 && self.currentSaveState != null)
+            {
+                text = text + "SAVE STATE<progDivB>" + self.currentSaveState.SaveToString() + "<progDivA>";
+                r3n.Log($" -- successfully saved state {self.currentSaveState.saveStateNumber} to disc (fresh)");
+            }
+
+            if (saveMaps)
+            {
+                foreach (KeyValuePair<string, Texture2D> mapDiscoveryTexture in self.mapDiscoveryTextures)
+                {
+                    if (!ModManager.ModdedRegionsEnabled && !list.Contains(mapDiscoveryTexture.Key) && mapDiscoveryTexture.Value != null)
+                    {
+                        text = text + "MAP<progDivB>" + mapDiscoveryTexture.Key + "<progDivB>" + Convert.ToBase64String(mapDiscoveryTexture.Value.EncodeToPNG()) + "<progDivA>";
+                    }
+                    else if (ModManager.ModdedRegionsEnabled && !list2.Contains(mapDiscoveryTexture.Key) && mapDiscoveryTexture.Value != null)
+                    {
+                        text = text + "MAP_" + self.PlayingAsSlugcat.value + "<progDivB>" + mapDiscoveryTexture.Key + "<progDivB>" + Convert.ToBase64String(mapDiscoveryTexture.Value.EncodeToPNG()) + "<progDivA>";
+                    }
+                }
+
+                foreach (KeyValuePair<string, long> item3 in self.mapLastUpdatedTime)
+                {
+                    if (!ModManager.ModdedRegionsEnabled && !list.Contains(item3.Key))
+                    {
+                        text = text + "MAPUPDATE<progDivB>" + item3.Key + string.Format(System.Globalization.CultureInfo.InvariantCulture, "<progDivB>{0}<progDivA>", item3.Value);
+                    }
+                    else if (ModManager.ModdedRegionsEnabled && !list2.Contains(item3.Key))
+                    {
+                        text = text + "MAPUPDATE_" + self.PlayingAsSlugcat.value + "<progDivB>" + item3.Key + string.Format(System.Globalization.CultureInfo.InvariantCulture, "<progDivB>{0}<progDivA>", item3.Value);
+                    }
+                }
+            }
+
+            if (saveMiscProg && !flag4)
+            {
+                text = text + "MISCPROG<progDivB>" + self.miscProgressionData.ToString() + "<progDivA>";
+            }
+
+            if (self.saveFileDataInMemory != null && !self.loadInProgress)
+            {
+                self.saveFileDataInMemory.Set("save", Custom.Md5Sum(text) + text, (!self.canSave) ? UserData.WriteMode.Deferred : UserData.WriteMode.Immediate);
+                r3n.Log($" -- Player progression Filestring is:{(Custom.Md5Sum(text) + text)}");
+                r3n.Log($" -- Player progression cansave is: {(self.canSave ? "Immediate" : "Deferred")}");
+            }
+
+            return true;
         }
 
         private void SaveState_SessionEnded(On.SaveState.orig_SessionEnded orig, SaveState self, RainWorldGame game, bool survived, bool newMalnourished)
@@ -2007,6 +2230,26 @@ namespace RainMeadow
                     }
                 }
             }
+            if (isExpeditionMode(out _))
+            {
+                if (message == "READY")
+                {
+                    sender.toggled ^= true;
+                    return;
+                }
+
+                if (message == "CONTINUE")
+                {
+                    if (OnlineManager.lobby.isOwner)
+                    {
+                        RainMeadow.Debug("Continue - host");
+                    }
+                    else
+                    {
+                        RainMeadow.Debug("Continue - client");
+                    }
+                }
+            }
             orig(self, sender, message);
         }
 
@@ -2031,8 +2274,10 @@ namespace RainMeadow
         {
             orig(self);
 
+            r3n.Log($"isStoryMode(out _): {isStoryMode(out _)} && self.continueButton != null: {self.continueButton?.ToString() ?? "null"} && self.ID != ProcessManager.ProcessID.Statistics: ID: {self.ID} - Statistics: {ProcessManager.ProcessID.Statistics}");
             if (isStoryMode(out var storyGameMode) && self.continueButton != null && self.ID != ProcessManager.ProcessID.Statistics)
             {
+                r3n.Log($"isInGame ({storyGameMode.isInGame}) && !changedRegions ({!storyGameMode.changedRegions}) && readyForTransition ({storyGameMode.readyForTransition}) == ReadyForTransition.Closed && !readyForWin ({!storyGameMode.readyForWin})");
                 if (OnlineManager.lobby.isOwner)
                 {
                     self.continueButton.buttonBehav.greyedOut = OnlineManager.lobby.clientSettings.Values.Any(cs => cs.inGame);
@@ -2041,6 +2286,7 @@ namespace RainMeadow
                 {
                     self.continueButton.signalText = "CONTINUE";
                     self.continueButton.menuLabel.text = self.Translate("CONTINUE");
+                    r3n.Log($"(self.continueButton.toggled - {(self.continueButton.toggled)}) self.Singal(self.continueButton, \"CONTINUE\")");
                     if (self.continueButton.toggled) self.Singal(self.continueButton, "CONTINUE");
                 }
                 else

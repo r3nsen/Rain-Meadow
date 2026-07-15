@@ -22,15 +22,19 @@ namespace RainMeadow
         [RPCMethod]
         public static void ChangeFood(short amt)
         {
+            r3n.Log("ChangeFood");
             if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame game)
             {
                 for (int i = 0; i < game.StoryPlayerCount; i++)
                 {
                     if (game.Players[i]?.state is PlayerState state)
                     {
+                        r3n.Log($" - ChangeFood - player[{i}].state");
                         var newFood = Math.Max(0, Math.Min(state.foodInStomach * 4 + state.quarterFoodPoints + amt, game.session.characterStats.maxFood * 4));
                         state.foodInStomach = newFood / 4;
                         state.quarterFoodPoints = newFood % 4;
+                        r3n.Log($" - ChangeFood - food in stomach: {state.foodInStomach}");
+                        r3n.Log($" - ChangeFood - quarter food points: {state.quarterFoodPoints}");
                     }
 
                     if (game.Players[i].realizedCreature is Player p)
