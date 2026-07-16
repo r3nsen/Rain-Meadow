@@ -2230,26 +2230,7 @@ namespace RainMeadow
                     }
                 }
             }
-            if (isExpeditionMode(out _))
-            {
-                if (message == "READY")
-                {
-                    sender.toggled ^= true;
-                    return;
-                }
-
-                if (message == "CONTINUE")
-                {
-                    if (OnlineManager.lobby.isOwner)
-                    {
-                        RainMeadow.Debug("Continue - host");
-                    }
-                    else
-                    {
-                        RainMeadow.Debug("Continue - client");
-                    }
-                }
-            }
+          
             orig(self, sender, message);
         }
 

@@ -85,6 +85,9 @@ namespace RainMeadow
         public SlugcatCustomization[] avatarSettings;
         //public int slugcatSelected;
         public ExpeditionLobbyData.ExpeditionDataState expeditionDataState;//ExpeditionData expeditionData;
+        internal int challengeIndex;
+        public bool[] isChallengeCompleted;
+
         public ExpeditionGameMode(Lobby lobby) : base(lobby)
         {
             avatarSettings = new SlugcatCustomization[4];

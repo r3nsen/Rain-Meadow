@@ -40,8 +40,15 @@ namespace RainMeadow
             bool isInGame;
             [OnlineField]
             bool readyForWin;
+            [OnlineField]
+            public byte readyForTransition;
+
             [OnlineField(nullable = true)]
             public string? saveStateString;
+
+            [OnlineField]
+            bool[] isChallengeCompleted;
+
             public State() { }
             public State(ExpeditionLobbyData expeditionLobbyData, OnlineResource onlineResource)
             {
@@ -54,6 +61,7 @@ namespace RainMeadow
                 food = (byte)((ps?.foodInStomach ?? 0) | ps?.quarterFoodPoints ?? 0 << 6);
                 isInGame = RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame && RWCustom.Custom.rainWorld.processManager.upcomingProcess is null;
                 readyForWin = expeditionGameMode.readyForWin;
+                readyForTransition = (byte)expeditionGameMode.readyForTransition;
                 saveStateString = expeditionGameMode.saveStateString;
                 r3n.Log($" - ctor saveStateString: {saveStateString}");
 
@@ -86,6 +94,33 @@ namespace RainMeadow
                     expeditionDataState = new ExpeditionDataState();
                     //     r3n.Log($" - expeditionDataState: {expeditionDataState}");
                 }
+
+                if (ExpeditionOnlineMenu.expeditionGameMode is not null)
+                {
+                    //r3n.Log($"ExpeditionOnlineMenu.expeditionGameMode is not null");
+                    //expeditionDataState.currentChallengeList = ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign]; // new Dictionary<SlugcatStats.Name, List<Expedition.Challenge>>();
+
+                    r3n.Log($"ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted - {ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted?.ToString() ?? "null"}");
+                    r3n.Log($"ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted.Length - {ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted?.Length}");
+                    r3n.Log($"currentChallengeList.Count - {expeditionDataState.currentChallengeList.Count}");
+                    if (ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted == null || ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted.Length != expeditionDataState.currentChallengeList.Count)
+                    {
+                        r3n.Log($"sneak inside - {expeditionDataState.currentChallengeList.Count}");
+                        ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted = new bool[expeditionDataState.currentChallengeList.Count];
+                        r3n.Log($"sneak inside - isChallengeCompleted: {isChallengeCompleted}");
+                    }
+                    r3n.Log($"currentChallengeList.Count - {expeditionDataState.currentChallengeList.Count}");
+                    isChallengeCompleted = new bool[expeditionDataState.currentChallengeList.Count];
+                    for (int i = 0; i < expeditionDataState.currentChallengeList.Count; i++)
+                    {
+                        r3n.Log($"isChallengeCompleted: {isChallengeCompleted?.ToString() ?? "null"}");
+                        r3n.Log($"ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted: {ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted.ToString() ?? "null"}");
+                        r3n.Log($"ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted: {ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted.ToString() ?? "null"}");
+                        isChallengeCompleted[i] = ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted[i] = expeditionDataState.currentChallengeList[i].completed;
+                        r3n.Log($"ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted[{i}] - {ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted[i]}");
+                    }
+                }
+
             }
 
             public override Type GetDataType()
@@ -118,6 +153,7 @@ namespace RainMeadow
 
                 expedition.isInGame = isInGame;
                 expedition.readyForWin = readyForWin;
+                expedition.readyForTransition = (StoryGameMode.ReadyForTransition)readyForTransition;
                 expedition.saveStateString = saveStateString;
                 r3n.Log($" - readto saveStateString: {saveStateString}");
                 expedition.hasSaveState = saveStateString != null;
@@ -150,6 +186,19 @@ namespace RainMeadow
                     expedition.menuSaveGameData = expedition.menuSaveState?.CreateSaveData();
                     expedition.needMenuSaveUpdate = true;
                 }
+
+                // for (int i = 0; i < expeditionDataState.currentChallengeList.Count; i++)
+                // {
+                if (ExpeditionOnlineMenu.expeditionGameMode is not null)
+                {
+                    r3n.Log($"ExpeditionOnlineMenu.expeditionGameMode: {ExpeditionOnlineMenu.expeditionGameMode}");
+                    r3n.Log($"ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted : {ExpeditionOnlineMenu.expeditionGameMode?.isChallengeCompleted}");
+                    r3n.Log($"isChallengeCompleted: {isChallengeCompleted}");
+                    ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted = isChallengeCompleted;
+                }
+                //   r3n.Log($"ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted[{i}] - {ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted[i]}");
+                // }
+
             }
         }
         public class ExpeditionDataState : Serializer.ICustomSerializable
@@ -158,8 +207,8 @@ namespace RainMeadow
             //public SlugcatStats.Name[] allChallengeLists_keys = new SlugcatStats.Name[] { };
             //public List<Expedition.Challenge>[] allChallengeLists_values = new List<Expedition.Challenge>[] { };
             //public Dictionary<SlugcatStats.Name, List<Expedition.Challenge>> allChallengeLists = new Dictionary<SlugcatStats.Name, List<Expedition.Challenge>>();
-            List<Challenge> currentChallengeList = new List<Challenge>();
-            string activeMission;
+            public List<Challenge> currentChallengeList = new List<Challenge>();
+            public string activeMission;
             //   public List<Expedition.Challenge> completedChallengeList = new List<Expedition.Challenge>();
             //   public Dictionary<string, string> allActiveMissions = new Dictionary<string, string>();
             //   public Dictionary<string, List<string>> requiredExpeditionContent = new Dictionary<string, List<string>>();
@@ -191,6 +240,7 @@ namespace RainMeadow
 
             public ExpeditionDataState()
             {
+
                 if (ExpeditionOnlineMenu.expeditionGameMode is not null)
                     currentChallengeList = ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign]; // new Dictionary<SlugcatStats.Name, List<Expedition.Challenge>>();
 
@@ -227,9 +277,57 @@ namespace RainMeadow
             }
             public void CreateSaveData()
             {
-
                 if (ExpeditionOnlineMenu.expeditionGameMode is not null)
-                    ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign] = currentChallengeList;
+                {
+                    //    r3n.Log($"ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign].Count - {ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign].Count}");
+                    //    r3n.Log($"currentChallengeList.Count - {currentChallengeList.Count}");
+                    if (ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign].Count == currentChallengeList.Count)
+                    {
+                        for (int i = 0; i < currentChallengeList.Count; i++)
+                        {
+                            //          r3n.Log($"currentChallengeList - {i}/{currentChallengeList.Count}");
+                            var oldCompleteState = ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].completed;
+                            ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i] = currentChallengeList[i];
+                            if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame)
+                            {
+                                ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].game = RWCustom.Custom.rainWorld.processManager.currentMainLoop as RainWorldGame;
+                                var newCompleteState = ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].completed;
+
+                                //            r3n.Log($"oldCompleteState - {oldCompleteState}");
+                                //            r3n.Log($"newCompleteState - {newCompleteState}");
+
+                                if (oldCompleteState != newCompleteState && newCompleteState)
+                                {
+                                    ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].completed = oldCompleteState;
+                                    r3n.Log($"{ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].completed}");
+                                    ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].CompleteChallenge();
+                                    r3n.Log($"ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][{i}].CompleteChallenge()");
+                                    r3n.Log($"{ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].completed}");
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign] = currentChallengeList;
+                    }
+                }
+                //if (ExpeditionOnlineMenu.expeditionGameMode is not null)
+                //{
+                //    for (int i = 0; i < ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign].Count; i++)
+                //    {
+                //        var a = ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].GetType();
+                //        var b = currentChallengeList[i].GetType();
+                //        if (a != b)
+                //        {
+                //            ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i] = currentChallengeList[i];
+                //        }
+                //        else
+                //        {
+
+                //        }
+                //    }
+                //}
                 ExpeditionData.activeMission = activeMission;
                 //   public List<Expedition.Challenge> completedChallengeList = new List<Expedition.Challenge>();
                 //   public Dictionary<string, string> allActiveMissions = new Dictionary<string, string>();
@@ -960,78 +1058,5 @@ namespace RainMeadow
             }
         }
 
-    }
-
-
-    public static class ObjectSerialize
-    {
-        public static byte[] Serialize(this Object obj)
-        {
-            if (obj == null)
-            {
-                return null;
-            }
-
-            using (var memoryStream = new MemoryStream())
-            {
-                var binaryFormatter = new BinaryFormatter();
-
-                binaryFormatter.Serialize(memoryStream, obj);
-
-                var compressed = Compress(memoryStream.ToArray());
-                return compressed;
-            }
-        }
-
-        public static Object DeSerialize(this byte[] arrBytes)
-        {
-            using (var memoryStream = new MemoryStream())
-            {
-                var binaryFormatter = new BinaryFormatter();
-                var decompressed = Decompress(arrBytes);
-
-                memoryStream.Write(decompressed, 0, decompressed.Length);
-                memoryStream.Seek(0, SeekOrigin.Begin);
-
-                return binaryFormatter.Deserialize(memoryStream);
-            }
-        }
-
-        public static byte[] Compress(byte[] input)
-        {
-            byte[] compressesData;
-
-            using (var outputStream = new MemoryStream())
-            {
-                using (var zip = new GZipStream(outputStream, CompressionMode.Compress))
-                {
-                    zip.Write(input, 0, input.Length);
-                }
-
-                compressesData = outputStream.ToArray();
-            }
-
-            return compressesData;
-        }
-
-        public static byte[] Decompress(byte[] input)
-        {
-            byte[] decompressedData;
-
-            using (var outputStream = new MemoryStream())
-            {
-                using (var inputStream = new MemoryStream(input))
-                {
-                    using (var zip = new GZipStream(inputStream, CompressionMode.Decompress))
-                    {
-                        zip.CopyTo(outputStream);
-                    }
-                }
-
-                decompressedData = outputStream.ToArray();
-            }
-
-            return decompressedData;
-        }
     }
 }
