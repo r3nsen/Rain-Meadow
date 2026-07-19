@@ -147,10 +147,21 @@ namespace RainMeadow
                 //      r3n.Log($"^ currentSelection: {(characterSelect.menu as ExpeditionMenu)?.currentSelection}, slugcat Selected: {expeditionGameMode?.slugcatSelected}");
                 //      expeditionGameMode.slugcatSelected = (characterSelect.menu as ExpeditionMenu).currentSelection;
                 //}
+                if (characterSelect != null)
+                {
+                    characterSelect.abandonButton.bumpBehav.greyedOut = false;
+                    characterSelect.confirmExpedition.buttonBehav.greyedOut = false;
+                }
             }
             else
             {
                 currentSelection = expeditionGameMode.slugcatSelected;
+                if (characterSelect != null)
+                {
+                    characterSelect.abandonButton.bumpBehav.greyedOut = true;
+                    characterSelect.confirmExpedition.buttonBehav.greyedOut = !expeditionGameMode.canJoinGame;
+                }
+
             }
             if (expeditionGameMode?.slugcatSelected == null) r3n.Log($"expeditionGameMode == null");
             if ((characterSelect?.menu as ExpeditionMenu) == null) r3n.Log($"(characterSelect.menu as ExpeditionMenu) == null");
@@ -188,6 +199,17 @@ namespace RainMeadow
                         {
                             characterSelect.slugcatButtons[i].buttonBehav.greyedOut = expeditionGameMode.slugcatSelected != i;
                         }
+
+
+                    }
+                    else
+                    {
+                        for (int i = 0; i < characterSelect.slugcatButtons.Length; i++)
+                        {
+                            characterSelect.slugcatButtons[i].buttonBehav.greyedOut = false;
+                        }
+
+
                     }
 
                 }

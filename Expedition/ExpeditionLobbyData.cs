@@ -287,10 +287,18 @@ namespace RainMeadow
                         {
                             //          r3n.Log($"currentChallengeList - {i}/{currentChallengeList.Count}");
                             var oldCompleteState = ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].completed;
+                            bool needUpdate = false;
+                            if (ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].description != currentChallengeList[i].description)
+                            {
+                                r3n.Log($"{ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].description} != {currentChallengeList[i].description} = {ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].description != currentChallengeList[i].description}");
+                                needUpdate = true;
+                            }
                             ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i] = currentChallengeList[i];
+                            if (ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].game is null)
+                                ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].game = RWCustom.Custom.rainWorld.processManager.currentMainLoop as RainWorldGame;
                             if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame)
                             {
-                                ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].game = RWCustom.Custom.rainWorld.processManager.currentMainLoop as RainWorldGame;
+
                                 var newCompleteState = ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].completed;
 
                                 //            r3n.Log($"oldCompleteState - {oldCompleteState}");
@@ -298,12 +306,15 @@ namespace RainMeadow
 
                                 if (oldCompleteState != newCompleteState && newCompleteState)
                                 {
+                                    needUpdate = false;
                                     ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].completed = oldCompleteState;
                                     r3n.Log($"{ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].completed}");
                                     ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].CompleteChallenge();
                                     r3n.Log($"ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][{i}].CompleteChallenge()");
                                     r3n.Log($"{ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].completed}");
                                 }
+                                if(needUpdate) ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign][i].UpdateDescription();
+
                             }
                         }
                     }
@@ -477,7 +488,12 @@ namespace RainMeadow
                         serializer.writer.Write(9);
                         serializer.writer.Write((item as PinChallenge).current);
                         serializer.writer.Write((item as PinChallenge).target);
-                        serializer.writer.Write((item as PinChallenge).pinList.Count); // will create an 0 len array
+                        int plen = (item as PinChallenge).pinList.Count;
+                        serializer.writer.Write(plen); // will create an 0 len array
+                       // for (int i = 0; i < plen; i++)
+                       // {
+
+                        //}
                         serializer.writer.Write((item as PinChallenge).spearList.Count); // will create an 0 len array
 
                         r3n.Log($"write - current {(item as PinChallenge).current}");

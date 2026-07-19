@@ -56,12 +56,91 @@ namespace RainMeadow
             On.Expedition.CycleScoreChallenge.CreatureKilled += CycleScoreChallenge_CreatureKilled;
             On.Expedition.GlobalScoreChallenge.CreatureKilled += GlobalScoreChallenge_CreatureKilled;
             On.Expedition.HuntChallenge.CreatureKilled += HuntChallenge_CreatureKilled;
+            IL.Expedition.PinChallenge.Update += PinChallenge_Update;
             IL.RainWorldGame.Update += RainWorldGame_Update2;
             //On.Expedition.PinChallenge.Update;
 
 
         }
+        //public static void On_RainMeadow_Player_AddFo1od(Action<RainMeadow, On.Player.orig_AddFood, Player, int> orig, RainMeadow _, On.Player.orig_AddFood origorig, Player self, int add)
+        //{
+       // }
+            private void PinChallenge_Update(ILContext il)
+        {
+            var c = new ILCursor(il);
+            var skip = c.DefineLabel();
+            c.GotoNext(MoveType.After,
+                x => x.MatchLdarg(0),
+                x => x.MatchLdfld<Expedition.PinChallenge>(nameof(Expedition.PinChallenge.pinList)),
+                x => x.MatchLdarg(0),
+                x => x.MatchLdfld<Expedition.PinChallenge>(nameof(Expedition.PinChallenge.spearList)),
+                x => x.MatchLdloc(2),
+                x => x.MatchCallvirt(typeof(List<Spear>).GetMethod("get_Item")),
+                x => x.MatchLdfld<Spear>(nameof(Spear.stuckInObject)),
+                x => x.MatchIsinst<Creature>(),
+                x => x.MatchCallvirt(typeof(List<Creature>).GetMethod("Contains")),
+                x => x.MatchBrtrue(out skip)
+                );
+            c.Emit(OpCodes.Ldarg_0);
+            c.Emit(OpCodes.Ldloc_2);
+            c.EmitDelegate((PinChallenge self, int index) =>
+            {
+                if (OnlineManager.lobby is null) return false;
+                if (OnlineManager.lobby.isOwner) return false;
+                if (isExpeditionMode(out var em))
+                {
+                    getChallengeID(self, out var id);
+                    OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreaturePinned, id, (self.spearList[index].stuckInObject as Creature).abstractCreature.GetOnlineCreature());
+                    self.pinList.Add(self.spearList[index].stuckInObject as Creature);
+                    return true;
+                }
+                return false;
+            });
+            c.Emit(OpCodes.Brtrue, skip);
+        }
 
+        //public override void Update()
+        //{
+        //    base.Update(); // chama update base
+        //    for (int i = 0; i < this.game.Players.Count; i++) // percorre todos os players
+        //    {
+        //        if (this.game.Players[i] != null && this.game.Players[i].realizedCreature != null && this.game.Players[i].realizedCreature.room != null) // se player atual nn é null, e tá realizadom e a sala dele nn é nula
+        //        {
+        //            for (int j = 0; j < this.game.Players[i].realizedCreature.room.updateList.Count; j++) // update and deletable list (physical obj e creatures eu acho)
+        //            {
+        //                // se o update and deletable atual for um spear, e foi lançado, e foi lançado por um player, e nn tá na lista
+        //                if (this.game.Players[i].realizedCreature.room.updateList[j] is global::Spear && (this.game.Players[i].realizedCreature.room.updateList[j] as global::Spear).thrownBy != null && (this.game.Players[i].realizedCreature.room.updateList[j] as global::Spear).thrownBy is global::Player && !this.spearList.Contains(this.game.Players[i].realizedCreature.room.updateList[j] as global::Spear))
+        //                {
+        //                    global::Expedition.ExpLog.Log("Spear added to spearList");
+        //                    this.spearList.Add(this.game.Players[i].realizedCreature.room.updateList[j] as global::Spear); // adiciona spear na lista
+        //                }
+        //            }
+        //        }
+        //    }
+        //    for (int k = 0; k < this.spearList.Count; k++) // percorre a lista de spears
+        //    {
+        //        if ((this.spearList[k].thrownBy != null && !(this.spearList[k].thrownBy is global::Player)) || this.spearList[k] == null) // se foi lançado, e nn foi por um player, ou é null
+        //        {
+        //            global::Expedition.ExpLog.Log("Spear removed from spearList");
+        //            this.spearList.Remove(this.spearList[k]); // remove da lista de spears
+        //            break;
+        //        }
+        //        // se tá preso em algo e esse algo é uma criatura, e tá preso na parede, e a a criatura nn tá na lista de criaturas
+        //        if (this.spearList[k].stuckInObject != null && this.spearList[k].stuckInObject is global::Creature && this.spearList[k].stuckInWall != null && !this.pinList.Contains(this.spearList[k].stuckInObject as global::Creature))
+        //        {
+        //            global::Expedition.ExpLog.Log("Creature pinned!");
+        //            this.pinList.Add(this.spearList[k].stuckInObject as global::Creature); // adiciona criatura na lista de criaturas
+        //            this.current++;// aumenta a quantia atual
+        //            this.UpdateDescription(); // atualiza descrição
+        //            this.spearList.Remove(this.spearList[k]); // remove spear da lista de spears
+        //            return;
+        //        }
+        //    }
+        //    if (this.current >= this.target)
+        //    {
+        //        this.CompleteChallenge();
+        //    }
+        //}
         private void RainWorldGame_Update2(ILContext il)
         {
             var c = new ILCursor(il);
@@ -79,7 +158,7 @@ namespace RainMeadow
             });
 
             c.GotoNext(MoveType.After,
-                x => x.MatchLdloc(24),            
+                x => x.MatchLdloc(24),
             x => x.MatchCall("Expedition.ExpeditionData", "get_challengeList"),
             x => x.MatchCallvirt(typeof(List<Challenge>).GetProperty("Count").GetGetMethod()),
             x => x.MatchBlt(out _)
@@ -104,30 +183,7 @@ namespace RainMeadow
                     //rpc
                     if (isExpeditionMode(out var em))
                     {
-                        int id = em.challengeIndex;
-                        r3n.Log($"id == {id}");
-                        if (id == -1)
-                        {
-                            r3n.Log($"oh no id == -1");
-                            bool found = false;
-                            // find id by description
-                            for (int i = 0; i < ExpeditionData.challengeList.Count; i++)
-                            {
-                                if (self.description == ExpeditionData.challengeList[i].description)
-                                {
-                                    if (found) throw new InvalidProgramException("not working, descriptions are equal ");
-                                    id = i;
-                                    r3n.Log($"id == {id}");
-                                    found = true;
-                                }
-                            }
-                            if (id == -1)
-                            {
-                                throw new InvalidProgramException("cannot find by descriptions");
-                            }
-
-
-                        }
+                        getChallengeID(self, out var id);
                         if (!OnlineManager.lobby.isOwner && !em.isChallengeCompleted[id])
                         {
                             r3n.Log($"invokeRPC completeChallenge {id} - {em.isChallengeCompleted[id]}");
@@ -144,41 +200,72 @@ namespace RainMeadow
             }
         }
 
+        void getChallengeID(Expedition.Challenge self, out int id)
+        {
+            id = -1;
+            if (isExpeditionMode(out var em))
+            {
+                id = em.challengeIndex;
+                r3n.Log($"id == {id}");
+                if (id == -1)
+                {
+                    r3n.Log($"oh no id == -1");
+                    bool found = false;
+                    // find id by description
+                    for (int i = 0; i < ExpeditionData.challengeList.Count; i++)
+                    {
+                        if (self.description == ExpeditionData.challengeList[i].description)
+                        {
+                            if (found) throw new InvalidProgramException("not working, descriptions are equal ");
+                            id = i;
+                            r3n.Log($"id == {id}");
+                            found = true;
+                        }
+                    }
+                    if (id == -1)
+                    {
+                        throw new InvalidProgramException("cannot find by descriptions");
+                    }
+
+
+                }
+            }
+        }
         private void HuntChallenge_CreatureKilled(On.Expedition.HuntChallenge.orig_CreatureKilled orig, Expedition.HuntChallenge self, Creature crit, int playerNumber)
         {
-            if (OnlineManager.lobby is null)
+            if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
             {
-                orig(self, crit, playerNumber);
+                getChallengeID(self, out var id);
+                OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, crit, playerNumber);
             }
             else
             {
-                // rpc
                 orig(self, crit, playerNumber);
             }
         }
 
         private void GlobalScoreChallenge_CreatureKilled(On.Expedition.GlobalScoreChallenge.orig_CreatureKilled orig, Expedition.GlobalScoreChallenge self, Creature crit, int playerNumber)
         {
-            if (OnlineManager.lobby is null)
+            if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
             {
-                orig(self, crit, playerNumber);
+                getChallengeID(self, out var id);
+                OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, crit, playerNumber);
             }
             else
             {
-                // rpc
                 orig(self, crit, playerNumber);
             }
         }
 
         private void CycleScoreChallenge_CreatureKilled(On.Expedition.CycleScoreChallenge.orig_CreatureKilled orig, Expedition.CycleScoreChallenge self, Creature crit, int playerNumber)
         {
-            if (OnlineManager.lobby is null)
+            if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
             {
-                orig(self, crit, playerNumber);
+                getChallengeID(self, out var id);
+                OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, crit, playerNumber);
             }
             else
             {
-                // rpc
                 orig(self, crit, playerNumber);
             }
         }
@@ -563,6 +650,7 @@ namespace RainMeadow
 
         private Menu.SlugcatSelectMenu.SaveGameData SlugcatSelectMenu_MineForSaveData(On.Menu.SlugcatSelectMenu.orig_MineForSaveData orig, ProcessManager manager, SlugcatStats.Name slugcat)
         {
+          //  return orig(manager, slugcat);
             if (!isExpeditionMode(out _)) return orig(manager, slugcat);
             if (OnlineManager.lobby != null && !OnlineManager.lobby.isOwner)
             {

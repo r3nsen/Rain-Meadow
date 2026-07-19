@@ -258,6 +258,7 @@ namespace RainMeadow
 
             if (ModManager.Expedition && self.saveSlot < 0)
             {
+                r3n.Log(" -- online_exp");
                 return "online_exp" + Math.Abs(self.saveSlot);
             }
 

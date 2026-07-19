@@ -83,10 +83,12 @@ namespace RainMeadow
         //}
         //
         public SlugcatCustomization[] avatarSettings;
+        public List<OnlineCreature> challengeKills;
         //public int slugcatSelected;
         public ExpeditionLobbyData.ExpeditionDataState expeditionDataState;//ExpeditionData expeditionData;
         internal int challengeIndex;
         public bool[] isChallengeCompleted;
+        internal bool needUpdateChallenge;
 
         public ExpeditionGameMode(Lobby lobby) : base(lobby)
         {
@@ -99,7 +101,8 @@ namespace RainMeadow
 
         public override bool AllowedInMode(PlacedObject item)
         {
-            return true;
+            //return true;
+            return base.AllowedInMode(item);
         }
         public override bool ShouldLoadCreatures(RainWorldGame game, WorldSession worldSession)
         {
