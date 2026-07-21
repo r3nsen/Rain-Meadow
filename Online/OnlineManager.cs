@@ -81,7 +81,6 @@ namespace RainMeadow
 
         public static void LeaveLobby()
         {
-            r3n.Log(" - LeaveLobby");
             ChatLogManager.ResetPlayerColors();
             MatchmakingManager.currentInstance.LeaveLobby();
             netIO?.ForgetEverything();

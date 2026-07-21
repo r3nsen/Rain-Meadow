@@ -44,8 +44,7 @@ namespace RainMeadow
 
         public override MenuScene.SceneID GetScene => null;
         public MeadowMenu(ProcessManager manager) : base(manager, RainMeadow.Ext_ProcessID.MeadowMenu)
-        {
-            r3n.Log($"lobby: {OnlineManager.lobby}, gamemode: {OnlineManager.lobby?.gameMode}, processID: {OnlineManager.lobby?.gameMode?.MenuProcessId()}");
+        {            
             RainMeadow.DebugMe();
             backTarget = RainMeadow.Ext_ProcessID.LobbySelectMenu;
 

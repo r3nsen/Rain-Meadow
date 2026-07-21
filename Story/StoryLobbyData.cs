@@ -78,7 +78,6 @@ namespace RainMeadow
             [OnlineField(nullable = true)]
             public MenuSaveStateState? currentMenuSaveState;
             
-
             public State() { }
 
             public State(StoryLobbyData storyLobbyData, OnlineResource onlineResource)

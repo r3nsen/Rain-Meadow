@@ -1,14 +1,9 @@
 using HarmonyLib;
-
 using Menu;
-
 using Mono.Cecil.Cil;
-
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
-
 using RainMeadow.UI;
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,7 +11,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-
 using UnityEngine;
 
 namespace RainMeadow
@@ -623,24 +617,15 @@ namespace RainMeadow
         }
 
         private void ProcessManager_PostSwitchMainProcess(On.ProcessManager.orig_PostSwitchMainProcess orig, ProcessManager self, ProcessManager.ProcessID ID)
-        {
-            r3n.Log($"ProcessManager_PostSwitchMainProcess - ProcessID: {ID}");
+        {            
             if (ID == Ext_ProcessID.LobbySelectMenu) self.currentMainLoop = new LobbySelectMenu(self);
             if (ID == Ext_ProcessID.LobbyCreateMenu) self.currentMainLoop = new LobbyCreateMenu(self);
             if (ID == Ext_ProcessID.ArenaLobbyMenu) self.currentMainLoop = new ArenaOnlineLobbyMenu(self);
             if (ID == Ext_ProcessID.MeadowMenu) self.currentMainLoop = new MeadowMenu(self);
-            if (ID == Ext_ProcessID.StoryMenu)
-            {
-                r3n.Log($"-- story");
-                self.currentMainLoop = new StoryOnlineMenu(self);
-            }
+            if (ID == Ext_ProcessID.StoryMenu) self.currentMainLoop = new StoryOnlineMenu(self);            
             if (ID == Ext_ProcessID.MeadowCredits) self.currentMainLoop = new MeadowCredits(self);
-            if (ID == Ext_ProcessID.ExpeditionMenu)
-            {
-                r3n.Log($"-- expedition");
-                self.currentMainLoop = new ExpeditionOnlineMenu(self);
-            }
-
+            if (ID == Ext_ProcessID.ExpeditionMenu) self.currentMainLoop = new ExpeditionOnlineMenu(self);
+            
             if (ID == ProcessManager.ProcessID.IntroRoll)
             {
                 try

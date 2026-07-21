@@ -31,10 +31,6 @@ namespace RainMeadow
         public ChatHud(HUD.HUD hud, RoomCamera camera) : base(hud)
         {
             textPrompt = hud.textPrompt;
-            r3n.Log($"textPrompt: {hud.textPrompt}");
-            r3n.Log($"hud.rainWorld.inGameTranslator: {hud.rainWorld.inGameTranslator}");
-            r3n.Log($"RainMeadow.rainMeadowOptions.ChatButtonKey.Value: {RainMeadow.rainMeadowOptions.ChatButtonKey.Value}");
-            r3n.Log($"RainMeadow.rainMeadowOptions.ChatLogKey.Value: {RainMeadow.rainMeadowOptions.ChatLogKey.Value}");
             this.camera = camera;
             game = camera.game;
 
