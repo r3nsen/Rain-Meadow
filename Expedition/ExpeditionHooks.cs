@@ -40,8 +40,6 @@ namespace RainMeadow
             IL.Expedition.PinChallenge.Update += PinChallenge_Update;
             IL.RainWorldGame.Update += GetChallengeIndex;            
             
-            On.ProcessManager.PostSwitchMainProcess += ProcessManager_PostSwitchMainProcess;
-
             //new Hook(typeof(RainMeadow.RainMeadow).GetMethod("Options_GetSaveFileName_SavOrExp", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance), Options_GetSaveFileName_SavOrExp);
 
             IL.ProcessManager.PreSwitchMainProcess += ProcessManager_PreSwitchMainProcess;            
