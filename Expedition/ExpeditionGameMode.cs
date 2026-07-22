@@ -1,12 +1,5 @@
-using Expedition;
-
-using Menu;
-using MoreSlugcats;
-using RainMeadow.Arena.ArenaOnlineGameModes.TeamBattle;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
 
 namespace RainMeadow
 {
@@ -15,9 +8,9 @@ namespace RainMeadow
         public int slugcatSelected;
         public bool needSlugUpdate = false;
         public bool hasSaveState;
-        
+
         public List<OnlineCreature> challengeKills;
-        
+
         public ExpeditionLobbyData.ExpeditionDataState expeditionDataState;//ExpeditionData expeditionData;
         internal int challengeIndex; // hack - see ExpeditionHooks 
         public bool[] isChallengeCompleted;
@@ -85,7 +78,7 @@ namespace RainMeadow
 
             if (lobby.isOwner)
             {
-                needMenuSaveUpdate = true; // reload menu with local save
+                needMenuSaveUpdate = true;
             }
         }
         public override void ConfigureAvatar(OnlineCreature onlineCreature)
@@ -116,22 +109,21 @@ namespace RainMeadow
         }
 
         public override AbstractCreature SpawnAvatar(RainWorldGame self, WorldCoordinate location)
-        {         
-                AbstractCreature creature;
-                AbstractCreature mainAvatar = null;
-                for (int i = 0; i < self.StoryPlayerCount; i++)
-                {
-                    creature = new AbstractCreature(self.world, StaticWorld.GetCreatureTemplate("Slugcat"), null, location, new EntityID(-1, i));                    
-                    creature.state = new PlayerState(creature, i, avatarSettings[i].playingAs, false) { isPup = avatarSettings[i].fakePup }; // look at avatarSettings
-                    
-                    self.world.GetAbstractRoom(creature.pos.room).AddEntity(creature);
-                    self.session.AddPlayer(creature);
-                    
-                    if (i == 0) mainAvatar = creature;
-                }
-                if (mainAvatar is null) throw new InvalidProgrammerException("Main avatar is null");
-                return mainAvatar;         
+        {
+            AbstractCreature creature;
+            AbstractCreature mainAvatar = null;
+            for (int i = 0; i < self.StoryPlayerCount; i++)
+            {
+                creature = new AbstractCreature(self.world, StaticWorld.GetCreatureTemplate("Slugcat"), null, location, new EntityID(-1, i));
+                creature.state = new PlayerState(creature, i, avatarSettings[i].playingAs, false) { isPup = avatarSettings[i].fakePup }; // look at avatarSettings
+
+                self.world.GetAbstractRoom(creature.pos.room).AddEntity(creature);
+                self.session.AddPlayer(creature);
+
+                if (i == 0) mainAvatar = creature;
+            }
+            if (mainAvatar is null) throw new InvalidProgrammerException("Main avatar is null");
+            return mainAvatar;
         }
     }
-
 }

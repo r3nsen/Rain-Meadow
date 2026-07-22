@@ -152,34 +152,33 @@ namespace RainMeadow
             public List<Challenge> currentChallengeList = new List<Challenge>();
             public List<string> activeUnlocks = new List<string>();
 
-            public string activeMission;
-            //  public List<Challenge> completedChallengeList = new List<Challenge>();
+            public string activeMission;            
 
             public float challengeDifficulty = 0.5f;
             public string startingDen;
             public bool newGame = false;
             public bool validateQuests = true;
-            public bool hasViewedManual = false;
+            // public bool hasViewedManual = false;
 
-            public bool devMode = false;
-            public int saveSlot;
-            public int[] ints;
+            // public bool devMode = false;
+            // public int saveSlot;
+            //npublic int[] ints;
 
-            public int level;
-            public int currentPoints;
-            public int perkLimit = 1;
-            public int totalPoints;
-            public int totalChallengesCompleted;
-            public int totalHiddenChallengesCompleted;
-            public int totalWins;
+            // public int level; // remove
+            // public int currentPoints; // remove
+            // public int perkLimit = 1;
+            // public int totalPoints;
+            // public int totalChallengesCompleted; // remove
+            // public int totalHiddenChallengesCompleted; // remove
+            // public int totalWins;
 
-            public string menuSong;
+            // public string menuSong;
 
             public ExpeditionDataState()
             {            
-                if (ExpeditionOnlineMenu.expeditionGameMode is not null)
+                if (ExpeditionOnlineMenu.expeditionGameMode is not null && ExpeditionOnlineMenu.expeditionGameMode.currentCampaign is not null) // hmmm
                 {
-                    currentChallengeList = ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign];
+                    currentChallengeList = ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign]; // seems like currentCampaign could be null - oh, jukebox can set this to null too? i had a bug where host was on jukebox and client on infinite loop trying to join until esc
                 }
                 activeUnlocks = ExpeditionGame.activeUnlocks;
 
@@ -189,21 +188,21 @@ namespace RainMeadow
                 startingDen = ExpeditionData.startingDen;
                 newGame = ExpeditionData.newGame;
                 validateQuests = ExpeditionData.validateQuests;
-                hasViewedManual = ExpeditionData.hasViewedManual;
+                // hasViewedManual = ExpeditionData.hasViewedManual;
 
-                devMode = ExpeditionData.devMode;
-                saveSlot = ExpeditionData.saveSlot;
-                ints = ExpeditionData.ints;
+                // devMode = ExpeditionData.devMode;
+                // saveSlot = ExpeditionData.saveSlot;
+                // ints = ExpeditionData.ints;
 
-                level = ExpeditionData.level;
-                currentPoints = ExpeditionData.currentPoints;
-                perkLimit = ExpeditionData.perkLimit;
-                totalPoints = ExpeditionData.totalPoints;
-                totalChallengesCompleted = ExpeditionData.totalHiddenChallengesCompleted;
-                totalHiddenChallengesCompleted = ExpeditionData.totalHiddenChallengesCompleted;
-                totalWins = ExpeditionData.totalWins;
+                // level = ExpeditionData.level;
+                // currentPoints = ExpeditionData.currentPoints;
+                // perkLimit = ExpeditionData.perkLimit;
+                // totalPoints = ExpeditionData.totalPoints;
+                // totalChallengesCompleted = ExpeditionData.totalHiddenChallengesCompleted;
+                // totalHiddenChallengesCompleted = ExpeditionData.totalHiddenChallengesCompleted;
+                // totalWins = ExpeditionData.totalWins;
 
-                menuSong = ExpeditionData.menuSong;                
+               // menuSong = ExpeditionData.menuSong;                
             }
 
             public void CreateSaveData(SlugcatStats.Name currentCampaign)
@@ -215,23 +214,23 @@ namespace RainMeadow
                 ExpeditionData.startingDen = startingDen;
                 ExpeditionData.newGame = newGame;
                 ExpeditionData.validateQuests = validateQuests;
-                ExpeditionData.hasViewedManual = hasViewedManual;
+                // ExpeditionData.hasViewedManual = hasViewedManual;
 
-                ExpeditionData.devMode = devMode;
-                ExpeditionData.saveSlot = saveSlot;
-                ExpeditionData.ints = ints;
+                // ExpeditionData.devMode = devMode;
+                // ExpeditionData.saveSlot = saveSlot;
+                // ExpeditionData.ints = ints;
 
-                ExpeditionData.level = level;
-                ExpeditionData.currentPoints = currentPoints;
-                ExpeditionData.perkLimit = perkLimit;
-                ExpeditionData.totalPoints = totalPoints;
-                ExpeditionData.totalHiddenChallengesCompleted = totalChallengesCompleted;
-                ExpeditionData.totalHiddenChallengesCompleted = totalHiddenChallengesCompleted;
-                ExpeditionData.totalWins = totalWins;
+                // ExpeditionData.level = level;
+                // ExpeditionData.currentPoints = currentPoints;
+                // ExpeditionData.perkLimit = perkLimit;
+                // ExpeditionData.totalPoints = totalPoints;
+                // ExpeditionData.totalHiddenChallengesCompleted = totalChallengesCompleted;
+                // ExpeditionData.totalHiddenChallengesCompleted = totalHiddenChallengesCompleted;
+                // ExpeditionData.totalWins = totalWins;
 
-                ExpeditionData.menuSong = menuSong;
+                // ExpeditionData.menuSong = menuSong;
 
-                if (ExpeditionGame.expeditionComplete) return;
+                if (ExpeditionGame.expeditionComplete) return; // r3n: in the win screen, current challenge list is used to set completed challenges, overriting it before complete challege setup crash the ending
 
                 var rwg = RWCustom.Custom.rainWorld.processManager.currentMainLoop as RainWorldGame;
 
@@ -700,20 +699,20 @@ namespace RainMeadow
                     serializer.writer.Write(startingDen ?? ""); //string 
                     serializer.writer.Write(newGame);//bool 
                     serializer.writer.Write(validateQuests);//bool 
-                    serializer.writer.Write(hasViewedManual);//bool 
+                    // serializer.writer.Write(hasViewedManual);//bool 
 
-                    serializer.writer.Write(devMode);//bool 
-                    serializer.writer.Write(saveSlot);  //int 
+                    // serializer.writer.Write(devMode);//bool 
+                    // serializer.writer.Write(saveSlot);  //int 
 
-                    serializer.writer.Write(level); // int  
-                    serializer.writer.Write(currentPoints);  // int  
-                    serializer.writer.Write(perkLimit);// int  
-                    serializer.writer.Write(totalPoints);  // int  
-                    serializer.writer.Write(totalChallengesCompleted); ; // int  
-                    serializer.writer.Write(totalHiddenChallengesCompleted);  // int  
-                    serializer.writer.Write(totalWins); // int  
+                    // serializer.writer.Write(level); // int  
+                    // serializer.writer.Write(currentPoints);  // int  
+                    // serializer.writer.Write(perkLimit);// int  
+                    // serializer.writer.Write(totalPoints);  // int  
+                    // serializer.writer.Write(totalChallengesCompleted); ; // int  
+                    // serializer.writer.Write(totalHiddenChallengesCompleted);  // int  
+                    // serializer.writer.Write(totalWins); // int  
 
-                    serializer.writer.Write(menuSong ?? "");//string 
+                    //serializer.writer.Write(menuSong ?? "");//string 
 
                 }
                 if (serializer.IsReading)
@@ -738,20 +737,20 @@ namespace RainMeadow
                     startingDen = serializer.reader.ReadString(); //string 
                     newGame = serializer.reader.ReadBoolean();//bool 
                     validateQuests = serializer.reader.ReadBoolean();//bool 
-                    hasViewedManual = serializer.reader.ReadBoolean();//bool 
+                    // hasViewedManual = serializer.reader.ReadBoolean();//bool 
                                                                       //allEarnedPassages = serializer.reader.Read();// Dictionary<string, int> 
-                    devMode = serializer.reader.ReadBoolean();//bool 
-                    saveSlot = serializer.reader.ReadInt32(); //int 
+                    // devMode = serializer.reader.ReadBoolean();//bool 
+                    // saveSlot = serializer.reader.ReadInt32(); //int 
 
-                    level = serializer.reader.ReadInt32(); // int  
-                    currentPoints = serializer.reader.ReadInt32(); ; // int  
-                    perkLimit = serializer.reader.ReadInt32();// int  
-                    totalPoints = serializer.reader.ReadInt32(); // int  
-                    totalChallengesCompleted = serializer.reader.ReadInt32(); // int  
-                    totalHiddenChallengesCompleted = serializer.reader.ReadInt32(); // int  
-                    totalWins = serializer.reader.ReadInt32(); // int  
+                    // level = serializer.reader.ReadInt32(); // int  
+                    // currentPoints = serializer.reader.ReadInt32(); ; // int  
+                    // perkLimit = serializer.reader.ReadInt32();// int  
+                    // totalPoints = serializer.reader.ReadInt32(); // int  
+                    // totalChallengesCompleted = serializer.reader.ReadInt32(); // int  
+                    // totalHiddenChallengesCompleted = serializer.reader.ReadInt32(); // int  
+                    // totalWins = serializer.reader.ReadInt32(); // int  
 
-                    menuSong = serializer.reader.ReadString();//string 
+                    // menuSong = serializer.reader.ReadString();//string 
                 }               
             }
 
