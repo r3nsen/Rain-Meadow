@@ -621,6 +621,17 @@ namespace RainMeadow
                 }
             }
 
+            if (ID == Ext_ProcessID.ExpeditionMenu)
+            {
+                if (!ModManager.Expedition)
+                {                    
+                    self.ShowDialog(new Menu.DialogNotify("You need to have Expedition enabled. Exiting...", new Vector2(480f, 320f), self, ()=> {
+                        ID = ProcessManager.ProcessID.MainMenu;
+                        orig(self, ID);
+                    }));
+                    return;
+                }
+            }
             orig(self, ID);
         }
 
