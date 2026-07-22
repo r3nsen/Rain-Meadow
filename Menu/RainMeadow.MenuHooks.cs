@@ -613,6 +613,14 @@ namespace RainMeadow
                 }
             }
 
+            if (ID == Expedition.ExpeditionEnums.ProcessID.ExpeditionMenu)
+            {
+                if (OnlineManager.lobby is not null)
+                {
+                    ID = Ext_ProcessID.ExpeditionMenu;
+                }
+            }
+
             orig(self, ID);
         }
 

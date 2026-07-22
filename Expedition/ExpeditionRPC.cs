@@ -17,9 +17,10 @@ namespace RainMeadow
             if (!(RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame)) return;
             if (!(ExpeditionData.challengeList[index] is PinChallenge)) throw new InvalidProgrammerException("not pin challenge");
 
+            crit.creature.Realize();
             var cl = ExpeditionData.challengeList[index] as PinChallenge;
             if (!cl.pinList.Contains(crit.realizedCreature))
-            { 
+            {
                 cl.pinList.Add(crit.realizedCreature);
                 cl.current++;
                 cl.UpdateDescription();
@@ -29,17 +30,17 @@ namespace RainMeadow
         [RPCMethod]
         public static void challengeCreatureKilled(int index, OnlineCreature crit, int pNum)
         {
+
             if (!(RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame)) return;
-            
-            var cl = ExpeditionData.challengeList[index];
-            cl.CreatureKilled(crit.realizedCreature, pNum);            
+
+            crit.creature.Realize();
+            ExpeditionData.challengeList[index].CreatureKilled(crit.realizedCreature, pNum);            
         }
 
         [RPCMethod]
         public static void completeChallenge(int index)
         {
             if (!(RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame)) return;
-            r3n.Log($"run RPC completeChallenge {index}");
             ExpeditionData.challengeList[index].CompleteChallenge();
         }
     }

@@ -72,8 +72,7 @@ namespace RainMeadow
 
             On.ProcessManager.CueAchievement += ProcessManager_CueAchievement;
 
-            On.GlobalRain.InitDeathRain += GlobalRain_InitDeathRain;
-            ExpeditionHooks();
+            On.GlobalRain.InitDeathRain += GlobalRain_InitDeathRain;            
         }
 
         private void RainWorldGame_RawUpdate1(ILContext il)
@@ -255,9 +254,12 @@ namespace RainMeadow
                 return orig(self);
             }
 
-            if (ModManager.Expedition && self.saveSlot < 0)
-            {         
-                return "online_exp" + Math.Abs(self.saveSlot);
+            if (isExpeditionMode(out _))
+            {
+                if (ModManager.Expedition && self.saveSlot < 0)
+                {
+                    return "online_exp" + Math.Abs(self.saveSlot);
+                }
             }
 
             if (self.saveSlot != 0)
