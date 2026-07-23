@@ -8,6 +8,7 @@ using UnityEngine;
 
 namespace RainMeadow
 {
+    // basically copied from story menu chat
     public partial class ExpeditionOnlineMenu : ExpeditionMenu, IChatSubscriber
     {
         //Chat constants
