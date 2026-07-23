@@ -1,14 +1,6 @@
 using Menu;
-using Menu.Remix.MixedUI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using RWCustom;
 using UnityEngine;
 using Expedition;
-using System.Runtime.ExceptionServices;
-using Menu.Remix;
-using Rewired;
 using static Menu.SlugcatSelectMenu;
 
 namespace RainMeadow
@@ -16,6 +8,10 @@ namespace RainMeadow
     public partial class ExpeditionOnlineMenu : ExpeditionMenu//, IChatSubscriber
     {
         public static ExpeditionGameMode expeditionGameMode;
+
+        private CheckBox friendlyFire;
+        private CheckBox reqCampaignSlug;
+        private MenuLabel? lobbyLabel, slugcatLabel;
 
         public ExpeditionOnlineMenu(ProcessManager manager) : base(manager)
         {
@@ -34,64 +30,141 @@ namespace RainMeadow
                 currentSelection = expeditionGameMode.slugcatSelected;
                 expeditionGameMode.needSlugUpdate = true;
             }
-        }
 
+            // implement MatchmakingManager.OnPlayerListReceived += OnlineManager_OnPlayerListReceived;
+
+            RMOverlayHUD.GetOverlay()?.DestroyChatHUD();
+            textAnchor = RainMeadow.rainMeadowOptions.ChatTextDownscroll.Value
+                ? ButtonScroller.TextAnchor.Bottom
+                : ButtonScroller.TextAnchor.Top;
+
+            SetupOnlineMenuItens();
+            
+            ChatTextBox.OnShutDownRequest += ResetChatInput;
+            ChatLogManager.Subscribe(this);
+
+        }
+        void SetupOnlineMenuItens()
+        {
+            lobbyLabel = new MenuLabel(this, pages[1], Translate("LOBBY"), new Vector2(194, 553), new(110, 30), true);
+            pages[0].subObjects.Add(lobbyLabel);
+
+            this.chatTextBoxPos = new Vector2(this.manager.rainWorld.options.ScreenSize.x * 0.001f + (1366f - this.manager.rainWorld.options.ScreenSize.x) / 2f, 0);
+            var toggleChat = new SimplerSymbolButton(this, pages[1], "Kill_Slugcat", "", this.chatTextBoxPos);
+            toggleChat.OnClick += (_) =>
+            {
+                ToggleChat(!this.isChatToggled);
+                if (input.controllerType == Options.ControlSetup.Preset.KeyboardSinglePlayer)
+                {
+                    selectedObject = null;
+                }
+            };
+            pages[0].subObjects.Add(toggleChat);
+        }
         public override void Update()
         {
+            if (nullLobbyError != null)
+            {
                 base.Update();
+                return;
+            }
 
-                if (OnlineManager.lobby == null) return;
+            if (OnlineManager.lobby == null && nullLobbyError == null)
+            {
+                float x = manager.rainWorld.options.ScreenSize.x;
+                float y = manager.rainWorld.options.ScreenSize.y;
+                float w = 480;
+                float h = 320;
+                nullLobbyError = new NullLobbyError(this, pages[0], new Vector2((x - w) / 2, (y - h) / 2), new Vector2(w, h), Utils.Translate("Story lobby is null! Exiting..."), false);
+                pages[0].subObjects.Add(nullLobbyError);
+                return;
+            }
 
-                if (OnlineManager.lobby.isOwner)
+            if (ChatTextBox.blockInput)
+            {
+                ChatTextBox.blockInput = false;
+                if ((RWInput.CheckPauseButton(0) || Input.GetKeyDown(KeyCode.Escape)) && !lastPauseButton)
                 {
-                    SetCampaign(ExpeditionData.slugcatPlayer);
-                    expeditionGameMode.slugcatSelected = currentSelection;
-                    
-                    if (characterSelect != null)
+                    PlaySound(SoundID.MENY_Already_Selected_MultipleChoice_Clicked);
+                    ToggleChat(false);
+                    lastPauseButton = true;
+                }
+                ChatTextBox.blockInput = true;
+            }
+
+            base.Update();
+
+            if (OnlineManager.lobby == null) return;
+
+            if (OnlineManager.lobby.isOwner)
+            {
+                SetCampaign(ExpeditionData.slugcatPlayer);
+                expeditionGameMode.slugcatSelected = currentSelection;
+
+                if (characterSelect != null)
+                {
+                    characterSelect.abandonButton.bumpBehav.greyedOut = false;
+                    if (characterSelect.confirmExpedition?.buttonBehav is not null)
+                        characterSelect.confirmExpedition.buttonBehav.greyedOut = false;
+                }
+            }
+            else
+            {
+                currentSelection = expeditionGameMode.slugcatSelected;
+                if (characterSelect != null)
+                {
+                    characterSelect.abandonButton.bumpBehav.greyedOut = true;
+                    if (characterSelect.confirmExpedition is not null)
+                        characterSelect.confirmExpedition.buttonBehav.greyedOut = !expeditionGameMode.canJoinGame;
+                }
+            }
+
+            if (expeditionGameMode.needMenuSaveUpdate)
+            {
+                characterSelect?.UpdateSelectedSlugcat((characterSelect.menu as ExpeditionMenu).currentSelection);
+                expeditionGameMode.needMenuSaveUpdate = false;
+            }
+
+            if (characterSelect != null && expeditionGameMode.needSlugUpdate)
+            {
+                expeditionGameMode.needSlugUpdate = false;
+                characterSelect.UpdateSelectedSlugcat(expeditionGameMode.slugcatSelected);
+
+                if (!OnlineManager.lobby.isOwner)
+                {
+                    for (int i = 0; i < characterSelect.slugcatButtons.Length; i++)
                     {
-                        characterSelect.abandonButton.bumpBehav.greyedOut = false;                    
-                        if (characterSelect.confirmExpedition?.buttonBehav is not null)
-                            characterSelect.confirmExpedition.buttonBehav.greyedOut = false;
+                        characterSelect.slugcatButtons[i].buttonBehav.greyedOut = expeditionGameMode.slugcatSelected != i;
                     }
                 }
                 else
                 {
-                    currentSelection = expeditionGameMode.slugcatSelected;
-                    if (characterSelect != null)
+                    for (int i = 0; i < characterSelect.slugcatButtons.Length; i++)
                     {
-                        characterSelect.abandonButton.bumpBehav.greyedOut = true;
-                        if (characterSelect.confirmExpedition is not null)
-                            characterSelect.confirmExpedition.buttonBehav.greyedOut = !expeditionGameMode.canJoinGame;
+                        characterSelect.slugcatButtons[i].buttonBehav.greyedOut = false;
+                    }
+                }
+            }
+            if (isChatToggled)
+            {
+                if (Input.GetKey(KeyCode.UpArrow))
+                {
+                    if (currentLogIndex < ChatLogManager.chatLog.Count - 1)
+                    {
+                        currentLogIndex++;
+                        UpdateLogDisplay();
+                    }
+                }
+                else if (Input.GetKey(KeyCode.DownArrow))
+                {
+                    if (currentLogIndex > 0)
+                    {
+                        currentLogIndex--;
+                        UpdateLogDisplay();
                     }
 
                 }
-                
-                if (expeditionGameMode.needMenuSaveUpdate)
-                {                                     
-                    characterSelect?.UpdateSelectedSlugcat((characterSelect.menu as ExpeditionMenu).currentSelection);                    
-                    expeditionGameMode.needMenuSaveUpdate = false;
-                }
-                if (characterSelect != null)
-                    if (expeditionGameMode.needSlugUpdate)
-                    {
-                        expeditionGameMode.needSlugUpdate = false;
-                        characterSelect.UpdateSelectedSlugcat(expeditionGameMode.slugcatSelected);
-
-                        if (!OnlineManager.lobby.isOwner)
-                        {
-                            for (int i = 0; i < characterSelect.slugcatButtons.Length; i++)
-                            {
-                                characterSelect.slugcatButtons[i].buttonBehav.greyedOut = expeditionGameMode.slugcatSelected != i;
-                            }
-                        }
-                        else
-                        {
-                            for (int i = 0; i < characterSelect.slugcatButtons.Length; i++)
-                            {
-                                characterSelect.slugcatButtons[i].buttonBehav.greyedOut = false;
-                            }
-                        }
-                    }            
+            }
         }
         public static Menu.SlugcatSelectMenu.SaveGameData? getSaveState()
         {
@@ -99,7 +172,7 @@ namespace RainMeadow
         }
         public void SetCampaign(SlugcatStats.Name campaign)
         {
-            if (expeditionGameMode.currentCampaign == campaign) return;            
+            if (expeditionGameMode.currentCampaign == campaign) return;
             expeditionGameMode.currentCampaign = campaign;
 
             SaveGameData sgd = MineForSaveData(RWCustom.Custom.rainWorld.processManager, campaign);
@@ -111,13 +184,18 @@ namespace RainMeadow
         }
         public override void ShutDownProcess()
         {
-            //RainMeadow.DebugMe();
-            var up = manager.upcomingProcess;            
+            isChatToggled = false;
+            ResetChatInput();
+            ChatTextBox.OnShutDownRequest -= ResetChatInput;
+            ChatLogManager.Unsubscribe(this);
+
+            RainMeadow.DebugMe();
+            var up = manager.upcomingProcess;
             if (up != ProcessManager.ProcessID.Game && up != RainMeadow.Ext_ProcessID.ExpeditionMenu && up != ExpeditionEnums.ProcessID.ExpeditionJukebox)
-            {                
+            {
                 OnlineManager.LeaveLobby();
             }
-            base.ShutDownProcess();            
+            base.ShutDownProcess();
         }
 
         public override void Singal(MenuObject sender, string message)
