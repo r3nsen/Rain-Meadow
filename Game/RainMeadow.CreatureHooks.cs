@@ -43,7 +43,7 @@ namespace RainMeadow
             On.Watcher.SandGrubAI.PickNewBurrow += SandGrubAI_PickNewBurrow;
 
             On.Watcher.BoxWorm.RecieveHelp += BoxWorm_RecieveHelp;
-            IL.Watcher.BoxWorm.LarvaHolder.Update += LarvaHolder_Update;
+            On.Watcher.BoxWorm.LarvaHolder.ctor += LarvaHolder_ctor;
 
             IL.Hazer.Update += Hazer_HasSprayed;
             IL.Hazer.Die += Hazer_HasSprayed;
@@ -276,29 +276,13 @@ namespace RainMeadow
             return orig(self);
         }
 
-        private void LarvaHolder_Update(ILContext il)
+        private void LarvaHolder_ctor(On.Watcher.BoxWorm.LarvaHolder.orig_ctor orig, BoxWorm.LarvaHolder self, int index, BodyChunk parentBodyChunk, float horizontalOffset, float verticalOffset, bool hasLarva)
         {
-            var c = new ILCursor(il);
-            c.GotoNext(MoveType.After,
-                i => i.MatchLdarg(0),
-                i => i.MatchLdfld<Watcher.BoxWorm.LarvaHolder>(nameof(Watcher.BoxWorm.LarvaHolder.abstractLarva)),
-                i => i.MatchBrtrue(out _));
+            orig(self, index, parentBodyChunk, horizontalOffset, verticalOffset, hasLarva);
+            //if (OnlineManager.lobby is null) return;
 
-            c.GotoNext(i => i.MatchRet());
-
-            var ret = c.MarkLabel();
-
-            c.GotoPrev(MoveType.Before,
-                i => i.MatchLdarg(0),
-                i => i.MatchCallOrCallvirt<BoxWorm.LarvaHolder>(nameof(BoxWorm.LarvaHolder.ManageLarvaDetachment)));
-            c.Emit(OpCodes.Ldarg_0);
-            c.EmitDelegate((BoxWorm.LarvaHolder self) =>
-            {
-                if (!RealizedFireSpriteLarva.themoddershavebeenlefttostarve.TryGetValue((BoxWorm.Larva)self.abstractLarva.realizedObject, out _))
-                {
-                    RealizedFireSpriteLarva.themoddershavebeenlefttostarve.Add((BoxWorm.Larva)self.abstractLarva.realizedObject, self);
-                }
-            });
+            if (!parentBodyChunk.owner.IsLocal()) self.hasLarva = false;
+            
         }
 
         private void BoxWorm_RecieveHelp(On.Watcher.BoxWorm.orig_RecieveHelp orig, Watcher.BoxWorm self)

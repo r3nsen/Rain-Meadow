@@ -13,7 +13,7 @@ namespace RainMeadow
             IL.SaveState.AbstractPhysicalObjectFromString += SaveState_AbstractPhysicalObjectFromString;
             On.SaveState.ReportConsumedItem += SaveState_ReportConsumedItem;
             APOFS += AbstractMeadowCollectible_APOFS;
-
+            APOFS += FireSpriteLarva_APOFS;
             // Seedcobs are cursed
             APOFS += SeedCob_APOFS;
             IL.SeedCob.PlaceInRoom += SeedCob_PlaceInRoom;
@@ -66,7 +66,14 @@ namespace RainMeadow
             c.Emit<PhysicalObject>(OpCodes.Call, "PlaceInRoom");
             c.MarkLabel(skip2);
         }
-
+        private AbstractPhysicalObject FireSpriteLarva_APOFS(World world, string[] array, EntityID entityID, AbstractPhysicalObject.AbstractObjectType apoType, WorldCoordinate pos)
+        {
+            if (apoType == Watcher.WatcherEnums.AbstractObjectType.FireSpriteLarva)
+            {
+                return new Watcher.BoxWorm.Larva.AbstractLarva(world, null, pos, entityID);
+            }
+            return null;
+        }
         // not handled by vanilla apofs for whathever freaking reason
         private AbstractPhysicalObject SeedCob_APOFS(World world, string[] array, EntityID entityID, AbstractPhysicalObject.AbstractObjectType apoType, WorldCoordinate pos)
         {
