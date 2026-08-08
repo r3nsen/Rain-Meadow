@@ -50,6 +50,7 @@ namespace RainMeadow
             if (onlineObject.apo.realizedObject is SmallNeedleWorm) return new RealizedSmallNeedleWormState((OnlineCreature)onlineObject);
             if (onlineObject.apo.realizedObject is BigMoth) return new RealizedMothState((OnlineCreature)onlineObject);
             if (onlineObject.apo.realizedObject is BoxWorm) return new RealizedBoxWormState((OnlineCreature)onlineObject);
+            if (onlineObject.apo.realizedObject is FireSprite) return new RealizedFireSprite((OnlineCreature)onlineObject);
             if (onlineObject.apo.realizedObject is DaddyLongLegs) return new RealizedDaddyLongLegsState((OnlineCreature)onlineObject);
             if (onlineObject.apo.realizedObject is Deer) return new RealizedDeerState((OnlineCreature)onlineObject);
             if (onlineObject.apo.realizedObject is DropBug) return new RealizedDropBugState((OnlineCreature)onlineObject);

@@ -84,13 +84,12 @@ namespace RainMeadow
         public void ReadTo(BoxWorm.LarvaHolder holder)
         {
             // holder.forceRelease = forceRelease;
-            // holder.retracted = retracted;
-            holder.timeToDislodge.SetClamped(timeToDislodge);
-            if (onlineLarvaID.FindEntity() is not OnlinePhysicalObject onlineLarva) return;
-
-            if (onlineLarva?.apo?.realizedObject is not Watcher.BoxWorm.Larva larva) return;
-            if (holder.abstractLarva is null)// != larva.abstractPhysicalObject)
-            {
+            // holder.retracted = retracted;            
+            holder.timeToDislodge.SetClamped(timeToDislodge);            
+            if (onlineLarvaID.FindEntity() is not OnlinePhysicalObject onlineLarva) return;            
+            if (onlineLarva.apo?.realizedObject is not Watcher.BoxWorm.Larva larva) return;
+            if (holder.abstractLarva != larva.abstractPhysicalObject)
+            {                
                 holder.abstractLarva = (BoxWorm.Larva.AbstractLarva)onlineLarva.apo;
                 holder.hasLarva = true;
             }
