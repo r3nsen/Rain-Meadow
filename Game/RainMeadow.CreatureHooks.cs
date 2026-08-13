@@ -42,8 +42,22 @@ namespace RainMeadow
 
             On.Watcher.SandGrubAI.PickNewBurrow += SandGrubAI_PickNewBurrow;
 
-            On.Watcher.BoxWorm.RecieveHelp += BoxWorm_RecieveHelp;
+            //On.Watcher.BoxWorm.RecieveHelp += BoxWorm_RecieveHelp;
             On.Watcher.BoxWorm.LarvaHolder.ctor += LarvaHolder_ctor;
+            // On.Watcher.BoxWormAI.DecideBehavior += BoxWormAI_DecideBehavior;
+            // On.Watcher.FireSpriteAI.DecideBehavior += FireSpriteAI_DecideBehavior;
+
+            On.Watcher.BoxWorm.NeedsHelp += BoxWorm_NeedsHelp;
+            On.Watcher.BoxWorm.RecieveHelp += BoxWorm_RecieveHelp;
+            On.Watcher.BoxWorm.HelpPriority += BoxWorm_HelpPriority;
+            On.Watcher.BoxWorm.CanLetGo += BoxWorm_CanLetGo;
+            On.Watcher.BoxWorm.CanAcceptHelp += BoxWorm_CanAcceptHelp;
+            On.Watcher.BoxWorm.AggreToHelp += BoxWorm_AggreToHelp;
+            On.Watcher.BoxWorm.IsHelpComing += BoxWorm_IsHelpComing;
+            On.Watcher.BoxWorm.HelpPoint += BoxWorm_HelpPoint;
+            On.Watcher.BoxWorm.HelpEntranceVec += BoxWorm_HelpEntranceVec;
+            On.Watcher.BoxWormAI.Update += BoxWormAI_Update;
+            // On.Watcher.BoxWormAI.
 
             IL.Hazer.Update += Hazer_HasSprayed;
             IL.Hazer.Die += Hazer_HasSprayed;
@@ -52,11 +66,86 @@ namespace RainMeadow
             On.Creature.SwitchGrasps += Creature_SwitchGrasps;
 
             On.Watcher.Rattler.ValidSpawnPos += Rattler_ValidSpawnPos;
-
+            On.RelationshipTracker.DynamicRelationship.Update += DynamicRelationship_Update;
             On.MoreSlugcats.StowawayBugAI.Update += StowawayBugAI_Update; // non owners will not change behavior on their own
             IL.MoreSlugcats.StowawayBug.Update += StowawayBug_Update; // non owners will not bite on their own
             IL.MoreSlugcats.StowawayBug.bodySetup += StowawayBug_bodySetup; // calling homepos instead of bodyChunk.pos because bodyChunk.pos will be different for non owners due to sync
             IL.MoreSlugcats.StowawayBug.Act += StowawayBug_Act; // non owners will not attack on their own 
+
+            On.RainWorldGame.Update += RainWorldGame_Update2; 
+        }
+
+        private void RainWorldGame_Update2(On.RainWorldGame.orig_Update orig, RainWorldGame self)
+        {
+            if (count % 10 == 0)
+            {
+                if (r3n.text == null || !self.cameras[0].ReturnFContainer("HUD2")._childNodes.Contains(r3n.text))
+                {
+
+                    r3n.text = new FLabel(RWCustom.Custom.GetFont(), "...");
+
+                    r3n.text.alignment = FLabelAlignment.Left;
+                    r3n.text.color = new UnityEngine.Color(.9f, .9f, .9f);
+                    r3n.text.scale = 1.2f;
+                    var pos = new Vector2(20, 500);
+                    r3n.text.x = pos.x;
+                    r3n.text.y = pos.y;
+                    self.cameras[0].ReturnFContainer("HUD2").AddChild(r3n.text);
+                }
+
+                r3n.text.text = "";
+            }
+            orig(self);
+        }
+
+        long count = 0;
+        private void DynamicRelationship_Update(On.RelationshipTracker.DynamicRelationship.orig_Update orig, RelationshipTracker.DynamicRelationship self)
+        {
+            orig(self);
+            if (count % 10 == 0)
+            {
+                var realized = self.rt?.AI?.creature?.realizedCreature;
+                if (realized is Watcher.BoxWorm)
+                {
+                    float like = -1;
+                    try
+                    {
+                        Player player = self.trackerRep.representedCreature.realizedObject as Player;
+                        like = self.rt.AI.creature.world.game.session.creatureCommunities.LikeOfPlayer(self.rt.AI.creature.creatureTemplate.communityID, self.rt.AI.creature.world.RegionNumber, (player.abstractCreature.state as PlayerState).playerNumber);
+                        if(!RealizedBoxWormState.creatureRelationship.TryGetValue(player, out _))
+                            RealizedBoxWormState.creatureRelationship.Add(player, self);
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+
+                    r3n.text.text += $"BoxWorm DynamicRelationship_Update\n";
+                    r3n.text.text += $" - {self} player like: {like} - {(self.rt.AI as IUseARelationshipTracker).UpdateDynamicRelationship(self)}\n";
+
+                }
+                //else if (realized is Lizard)
+                //{
+                //    r3n.text.text += $"Lizard DynamicRelationship_Update\n";
+                //    r3n.text.text += $" - {self}  - {(self.rt.AI as IUseARelationshipTracker).UpdateDynamicRelationship(self)}\n";
+                //}
+            }
+        }
+
+        private void BoxWormAI_Update(On.Watcher.BoxWormAI.orig_Update orig, BoxWormAI self)
+        {
+                 
+            orig(self);
+            if (count % 10 == 0)
+            {
+                r3n.text.text += "\nPrey:\n";
+                for (int i = 0; i < self.preyTracker.prey.Count; i++)
+                {
+                    r3n.text.text += $" - {self.preyTracker.prey[i]}\n";
+                }
+                r3n.text.text += $"attackTarget: {self.AttackTarget}\n";
+            }
+            count++;
         }
 
         private void StowawayBug_Act(ILContext il)
@@ -285,15 +374,81 @@ namespace RainMeadow
             
         }
 
+        private void BoxWormAI_DecideBehavior(On.Watcher.BoxWormAI.orig_DecideBehavior orig, BoxWormAI self)
+        {
+            if (!self.ThisCreature.IsLocal()) return;
+            orig(self);
+        }
+        private void FireSpriteAI_DecideBehavior(On.Watcher.FireSpriteAI.orig_DecideBehavior orig, FireSpriteAI self)
+        {
+            if (!self.ThisCreature.IsLocal()) return;
+            orig(self);            
+        }
         private void BoxWorm_RecieveHelp(On.Watcher.BoxWorm.orig_RecieveHelp orig, Watcher.BoxWorm self)
         {
-            if (OnlineManager.lobby != null && self.abstractPhysicalObject.GetOnlineObject(out var opo) && opo.isMine)
-            {
-                orig(self);
-                opo.BroadcastRPCInRoomExceptOwners(opo.RecieveHelp);
-                return;
-            }
+            //RainMeadow.Info("recieve help");
+            //if (OnlineManager.lobby != null && self.abstractPhysicalObject.GetOnlineObject(out var opo) && opo.isMine)
+            //{
+            //    orig(self);
+            //    opo.BroadcastRPCInRoomExceptOwners(opo.RecieveHelp);
+            //    return;
+            //}
             orig(self);
+        }
+        private Vector2 BoxWorm_HelpEntranceVec(On.Watcher.BoxWorm.orig_HelpEntranceVec orig, BoxWorm self)
+        {
+            var r = orig(self);
+            //RainMeadow.Info($"HelpEntranceVec: {r}");
+            return r;
+        }
+
+        private Vector2 BoxWorm_HelpPoint(On.Watcher.BoxWorm.orig_HelpPoint orig, BoxWorm self)
+        {
+            var r = orig(self);
+            //RainMeadow.Info($"HelpPoint: {r}");
+            return r;
+        }
+
+        private bool BoxWorm_IsHelpComing(On.Watcher.BoxWorm.orig_IsHelpComing orig, BoxWorm self)
+        {
+            var r = orig(self);
+            //RainMeadow.Info($"IsHelpComing: {r}");
+            return r;
+        }
+
+        private void BoxWorm_AggreToHelp(On.Watcher.BoxWorm.orig_AggreToHelp orig, BoxWorm self)
+        {
+            //RainMeadow.Info($"AggreToHelp");
+            orig(self);
+            
+        }
+
+        private bool BoxWorm_CanAcceptHelp(On.Watcher.BoxWorm.orig_CanAcceptHelp orig, BoxWorm self)
+        {
+            var r = orig(self);
+            //RainMeadow.Info($"CanAcceptHelp: {r}");
+            return r;
+        }
+
+        private bool BoxWorm_CanLetGo(On.Watcher.BoxWorm.orig_CanLetGo orig, BoxWorm self)
+        {
+            var r = orig(self);
+            //RainMeadow.Info($"CanLetGo: {r}");
+            return r;
+        }
+
+        private float BoxWorm_HelpPriority(On.Watcher.BoxWorm.orig_HelpPriority orig, BoxWorm self)
+        {
+            var r = orig(self);
+            //RainMeadow.Info($"HelpPriority: {r}");
+            return r;
+        }
+
+        private bool BoxWorm_NeedsHelp(On.Watcher.BoxWorm.orig_NeedsHelp orig, BoxWorm self)
+        {
+            var r = orig(self);
+            //RainMeadow.Info($"NeedsHelp: {r} - attacktarget: {self.ai.AttackTarget}, behavior: {self.ai.behavior}, memory counter: ({self.ai.memoryCounter.normalized}|{self.ai.memoryCounter}), keep calling for help: {self.ai.keepCallingForHelp}");
+            return r;
         }
 
         private void Hazer_HasSprayed(ILContext il)
