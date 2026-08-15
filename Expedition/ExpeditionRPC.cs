@@ -43,5 +43,20 @@ namespace RainMeadow
             if (!(RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame)) return;
             ExpeditionData.challengeList[index].CompleteChallenge();
         }
+
+        [RPCMethod]
+        public static void SlowTimePerk()
+        {
+            if (!(RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame)) return;
+                
+            for (int i = 0; i < ExpeditionGame.unlockTrackers.Count; i++)
+            {
+                if (ExpeditionGame.unlockTrackers[i] is ExpeditionGame.SlowTimeTracker stt)
+                {
+                    ((Player)stt.game.Players[0].realizedCreature).mushroomCounter = 100;
+                    stt.cooldown = 10;
+                }
+            }
+        }
     }
 }

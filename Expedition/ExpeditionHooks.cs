@@ -42,7 +42,34 @@ namespace RainMeadow
             
             //new Hook(typeof(RainMeadow.RainMeadow).GetMethod("Options_GetSaveFileName_SavOrExp", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance), Options_GetSaveFileName_SavOrExp);
 
-            IL.ProcessManager.PreSwitchMainProcess += ProcessManager_PreSwitchMainProcess;            
+            IL.ProcessManager.PreSwitchMainProcess += ProcessManager_PreSwitchMainProcess;
+
+            On.Expedition.ExpeditionGame.SlowTimeTracker.Update += SlowTimeTracker_Update;
+        }
+
+        private void SlowTimeTracker_Update(On.Expedition.ExpeditionGame.SlowTimeTracker.orig_Update orig, ExpeditionGame.SlowTimeTracker self)
+        {
+            if (OnlineManager.lobby is null || OnlineManager.lobby.isOwner)
+            {
+                orig(self);
+                return;
+            }
+
+            if (self.cooldown > 0) return;
+
+            for (int i = 0; i < self.game.Players.Count; i++)
+            {
+                if (self.game.Players[i].realizedCreature != null)
+                {
+                    Player player = (Player)self.game.Players[i].realizedCreature;
+                    
+                    if (((player.input[0].mp && player.input[1].pckp) || (player.input[0].pckp && player.input[1].mp)) && self.cooldown <= 0f)
+                    {                    
+                        OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.SlowTime);
+                        break;
+                    }
+                }
+            }
         }
 
         private void ProcessManager_PreSwitchMainProcess(ILContext il)

@@ -46,6 +46,11 @@ namespace RainMeadow
             [OnlineField(group = "expeditiondata")]
             bool[] isChallengeCompleted;
 
+            [OnlineField]
+            public int mushroomCounter;
+            [OnlineFieldHalf]
+            public float slowTimeCooldown;
+
             public State() { }
             public State(ExpeditionLobbyData expeditionLobbyData, OnlineResource onlineResource)
             {                
@@ -54,7 +59,14 @@ namespace RainMeadow
 
                 PlayerState ps = currentGameState?.Players[0].state as PlayerState;
 
-                food = (byte)((ps?.foodInStomach ?? 0) | ps?.quarterFoodPoints ?? 0 << 6);
+                food = (byte)(((ps?.foodInStomach ?? 0) << 2) | ps?.quarterFoodPoints ?? 0 & 3);
+
+                mushroomCounter = (currentGameState?.Players[0].realizedCreature as Player)?.mushroomCounter ?? 0;
+                for (int i = 0; i < ExpeditionGame.unlockTrackers.Count; i++)
+                {
+                    if (ExpeditionGame.unlockTrackers[i] is ExpeditionGame.SlowTimeTracker stt)
+                        slowTimeCooldown = stt.cooldown;
+                }
                 isInGame = RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame && RWCustom.Custom.rainWorld.processManager.upcomingProcess is null;
                 readyForWin = expeditionGameMode.readyForWin;
                 readyForTransition = (byte)expeditionGameMode.readyForTransition;
@@ -107,13 +119,25 @@ namespace RainMeadow
                 RainWorldGame currentGameState = RWCustom.Custom.rainWorld.processManager.currentMainLoop as RainWorldGame;
                 if (currentGameState is not null)
                 {
-                    PlayerState ps = currentGameState.Players[0].state as PlayerState;
+                    PlayerState ps = (PlayerState)currentGameState.Players[0].state; // TODO: jolly support
 
-                    int _food = food & 63;
-                    int _quarterfood = food >> 6;
+                    int _food = food >> 2;
+                    int _quarterfood = food & 3;
 
                     ps.foodInStomach = _food;
                     ps.quarterFoodPoints = _quarterfood;
+
+                    if ((currentGameState?.Players[0].realizedCreature is Player player))
+                    {
+                        player.mushroomCounter = mushroomCounter;
+                        player.AddFood(0);
+                    }
+
+                    for (int i = 0; i < ExpeditionGame.unlockTrackers.Count; i++)
+                    {
+                        if (ExpeditionGame.unlockTrackers[i] is ExpeditionGame.SlowTimeTracker stt)
+                            stt.cooldown = slowTimeCooldown;
+                    }
                 }
 
                 expedition.isInGame = isInGame;
