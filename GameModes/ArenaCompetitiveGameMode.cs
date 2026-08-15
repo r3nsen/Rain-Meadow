@@ -7,17 +7,17 @@ using Menu;
 using MoreSlugcats;
 using RainMeadow.Arena.ArenaOnlineGameModes.ArenaChallengeModeNS;
 using RainMeadow.Arena.ArenaOnlineGameModes.TeamBattle;
+using RWCustom;
 using UnityEngine;
-using static RainMeadow.ArenaPrepTimer;
 
 namespace RainMeadow
 {
     public class ArenaOnlineGameMode : OnlineGameMode
     {
         /// <summary>
-        /// Acts as a quick way to access current game session. Assigned during ArenaSessionCtor, after orig()
+        /// Helper property that statically gets the current <see cref="ArenaGameSession"/>.
         /// </summary>
-        public ArenaGameSession session;
+        public ArenaGameSession? ArenaSession => (Custom.rainWorld.processManager.currentMainLoop as RainWorldGame)?.GetArenaGameSession;
         public ArenaOnlineSetup myArenaSetup;
         public ExternalArenaGameMode externalArenaGameMode;
         public string currentGameMode;
@@ -56,6 +56,7 @@ namespace RainMeadow
 
         public bool piggyBack = RainMeadow.rainMeadowOptions.EnablePiggyBack.Value;
         public bool amoebaControl = RainMeadow.rainMeadowOptions.AmoebaControl.Value;
+        public bool fullInvisInRippleSpace = RainMeadow.rainMeadowOptions.ArenaWatcherFullInvisibleInRippleSpace.Value;
 
         public bool friendlyFire = RainMeadow.rainMeadowOptions.FriendlyFire.Value;
 
@@ -64,6 +65,7 @@ namespace RainMeadow
         public int foodScore = RainMeadow.rainMeadowOptions.ArenaFoodScore.Value;
 
         public int spearHitScore = RainMeadow.rainMeadowOptions.ArenaSpearHitScore.Value;
+        public int countdownSafetyCatchTimer = RainMeadow.rainMeadowOptions.CountdownSafetyCatchTimer.Value;
 
         public int killScore = RainMeadow.rainMeadowOptions.ArenaKillScore.Value;
         public int aliveScore = RainMeadow.rainMeadowOptions.ArenaAliveScore.Value;
@@ -136,6 +138,8 @@ namespace RainMeadow
 
         // host needs time to do scoring for everyone else before they load the overlay
         public bool hostLoadedOverlay;
+
+        public uint timerTicks;
 
         public ArenaPrepTimer arenaPrepTimer;
         public int setupTime = RainMeadow.rainMeadowOptions.ArenaCountDownTimer.Value;
@@ -1162,6 +1166,7 @@ namespace RainMeadow
         {
             setupTime = RainMeadow.rainMeadowOptions.ArenaCountDownTimer.Value;
             trackSetupTime = setupTime;
+            timerTicks = 0;
         }
 
         public void ResetPlayersEntered()
@@ -1290,8 +1295,6 @@ namespace RainMeadow
             return true;
         }
 
-        private int previousSecond = -1;
-
         public override void LobbyTick(uint tick)
         {
             if (leaveToRestart)
@@ -1303,9 +1306,8 @@ namespace RainMeadow
             base.LobbyTick(tick);
             if (OnlineManager.lobby.isOwner)
             {
-                DateTime currentTime = DateTime.UtcNow;
-                int currentSecond = currentTime.Second;
-                if (currentSecond != previousSecond)
+                timerTicks++;
+                if (timerTicks >= OnlineManager.instance.framesPerSecond)
                 {
                     if (forceReadyCountdownTimer > 0)
                     {
@@ -1318,12 +1320,12 @@ namespace RainMeadow
 
                     if (arenaPrepTimer != null)
                     {
-                        if (setupTime > 0 && arenaPrepTimer.showMode == TimerMode.Countdown)
+                        if (setupTime > 0 && arenaPrepTimer.showMode == ArenaPrepTimer.TimerMode.Countdown)
                         {
                             setupTime = externalArenaGameMode.TimerDirection(this, setupTime);
                         }
                     }
-                    previousSecond = currentSecond;
+                    timerTicks = 0;
                 }
             }
         }

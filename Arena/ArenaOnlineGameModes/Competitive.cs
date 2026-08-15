@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using Menu;
-using RainMeadow;
 using RainMeadow.Arena.ArenaOnlineGameModes.TeamBattle;
 using UnityEngine;
 
@@ -17,17 +16,20 @@ namespace RainMeadow
         private int _timerDuration;
         public override ArenaSetup.GameTypeID GetGameModeId => FFA.FFAMode;
 
-        public static bool isFFA(ArenaOnlineGameMode arena, out FFA ffa)
+        public static bool IsFfaMode(out FFA ffa)
         {
-            ffa = null;
-            if (arena.currentGameMode == FFAMode.value)
+            ffa = null!;
+
+            if (!RainMeadow.isArenaMode(out ArenaOnlineGameMode arenaOnline))
+                return false;
+
+            if (arenaOnline.registeredGameModes.TryGetValue(FFAMode.value, out ExternalArenaGameMode externalArena)
+                && arenaOnline.currentGameMode == FFAMode.value)
             {
-                ffa = (
-                    arena.registeredGameModes.FirstOrDefault(x => x.Key == FFAMode.value).Value
-                    as FFA
-                );
+                ffa = (FFA)externalArena;
                 return true;
             }
+
             return false;
         }
 
@@ -112,21 +114,12 @@ namespace RainMeadow
             OnlinePlayer player
         )
         {
-
-            if (base.AddIcon(arena, display, owner, customization, player) != "")
-            {
-                return base.AddIcon(arena, display, owner, customization, player);
-            }
-
+            string arenaIcon = base.AddIcon(arena, display, owner, customization, player);
+            if (arenaIcon != "")
+                return arenaIcon;
             if (owner.clientSettings.owner == OnlineManager.lobby.owner)
-            {
                 return "ChieftainA";
-            }
-            else
-            {
-                return "Kill_Slugcat";
-            }
-
+            return "";
         }
 
         public override Color IconColor(
