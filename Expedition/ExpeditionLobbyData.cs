@@ -30,7 +30,7 @@ namespace RainMeadow
             public int selectedSlugcat;
 
             [OnlineField]
-            byte food; // 0bqqffffff 63 pips + 3/4 half
+            byte food; // 0bffffffqq
             [OnlineField]
             bool isInGame;
             [OnlineField]
@@ -84,10 +84,10 @@ namespace RainMeadow
                 else
                 {
                     hasSaveState = expeditionGameMode.hasSaveState;
-                    if (currentMenuSaveState != expeditionGameMode.menuSaveState)
-                    {
-                        currentMenuSaveState = expeditionGameMode.menuSaveState;
-                    }
+                    //if (currentMenuSaveState != expeditionGameMode.menuSaveState)
+                    //{
+                    currentMenuSaveState = expeditionGameMode.menuSaveState;
+                    //}
                     expeditionDataState = new ExpeditionDataState();
                 }
 

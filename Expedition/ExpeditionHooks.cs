@@ -356,7 +356,6 @@ namespace RainMeadow
             {
                 return orig(self);
             }
-            r3n.Log($"ExpeditionSaveFileName: {self.rainWorld.options.saveSlot}");
             if (self.rainWorld.options.saveSlot >= 0)
             {
                 return "online_expCore" + (self.rainWorld.options.saveSlot + 1);

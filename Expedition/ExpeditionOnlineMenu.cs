@@ -18,7 +18,7 @@ namespace RainMeadow
             expeditionGameMode = (ExpeditionGameMode)OnlineManager.lobby.gameMode;
             expeditionGameMode.Sanitize();
 
-            SetCampaign(ExpeditionData.slugcatPlayer);
+            //SetCampaign(ExpeditionData.slugcatPlayer);
             if (OnlineManager.lobby.isOwner)
             {
                 expeditionGameMode.currentCampaign = ExpeditionData.slugcatPlayer;
@@ -172,16 +172,16 @@ namespace RainMeadow
         }
         public void SetCampaign(SlugcatStats.Name campaign)
         {
-            if (expeditionGameMode.currentCampaign == campaign) return;
+            if (expeditionGameMode.currentCampaign == campaign && expeditionGameMode.menuSaveGameData != null) return;
             expeditionGameMode.currentCampaign = campaign;
-            r3n.Log("expeditionGameMode.currentCampaign = campaign");
-
+            
             SaveGameData sgd = MineForSaveData(RWCustom.Custom.rainWorld.processManager, campaign);
 
             if (sgd is not null)
                 expeditionGameMode.menuSaveState = new StoryLobbyData.MenuSaveStateState(sgd);
             else
                 expeditionGameMode.menuSaveState = null;
+            
         }
         public override void ShutDownProcess()
         {
