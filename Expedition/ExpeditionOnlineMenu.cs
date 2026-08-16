@@ -166,7 +166,7 @@ namespace RainMeadow
                 }
             }
         }
-        public static Menu.SlugcatSelectMenu.SaveGameData? getSaveState()
+        public static Menu.SlugcatSelectMenu.SaveGameData getSaveState()
         {
             return expeditionGameMode.menuSaveGameData;
         }
@@ -174,6 +174,7 @@ namespace RainMeadow
         {
             if (expeditionGameMode.currentCampaign == campaign) return;
             expeditionGameMode.currentCampaign = campaign;
+            r3n.Log("expeditionGameMode.currentCampaign = campaign");
 
             SaveGameData sgd = MineForSaveData(RWCustom.Custom.rainWorld.processManager, campaign);
 

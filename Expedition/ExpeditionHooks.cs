@@ -65,7 +65,7 @@ namespace RainMeadow
                     
                     if (((player.input[0].mp && player.input[1].pckp) || (player.input[0].pckp && player.input[1].mp)) && self.cooldown <= 0f)
                     {                    
-                        OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.SlowTime);
+                        OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.SlowTimePerk);
                         break;
                     }
                 }
@@ -115,8 +115,14 @@ namespace RainMeadow
                 if (isExpeditionMode(out var em))
                 {
                     getChallengeID(self, out var id);
-                    OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreaturePinned, id, (self.spearList[index].stuckInObject as Creature).abstractCreature.GetOnlineCreature());
-                    self.pinList.Add(self.spearList[index].stuckInObject as Creature);
+
+                    var stuckInSpear = (Creature)self.spearList[index].stuckInObject;
+                    
+                    if (stuckInSpear.abstractCreature.GetOnlineCreature() is OnlineCreature onlineCrit)
+                    {
+                        OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreaturePinned, id, onlineCrit);
+                        self.pinList.Add(stuckInSpear);
+                    }
                     return true;
                 }
                 return false;
@@ -212,9 +218,9 @@ namespace RainMeadow
             if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
             {
                 getChallengeID(self, out var id);
-                var onlineCrit = crit.abstractCreature.GetOnlineCreature();
-
-                OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, onlineCrit, playerNumber);
+                
+                if(crit.abstractCreature.GetOnlineCreature() is OnlineCreature onlineCrit)
+                    OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, onlineCrit, playerNumber);
             }
             else
             {
@@ -227,9 +233,9 @@ namespace RainMeadow
             if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
             {
                 getChallengeID(self, out var id);
-                var onlineCrit = crit.abstractCreature.GetOnlineCreature();
-
-                OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, onlineCrit, playerNumber);
+                
+                if (crit.abstractCreature.GetOnlineCreature() is OnlineCreature onlineCrit)
+                    OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, onlineCrit, playerNumber);
             }
             else
             {
@@ -242,9 +248,9 @@ namespace RainMeadow
             if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
             {
                 getChallengeID(self, out var id);
-                var onlineCrit = crit.abstractCreature.GetOnlineCreature();
-
-                OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, onlineCrit, playerNumber);
+                
+                if (crit.abstractCreature.GetOnlineCreature() is OnlineCreature onlineCrit)
+                    OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, onlineCrit, playerNumber);
             }
             else
             {
@@ -361,7 +367,7 @@ namespace RainMeadow
 
         public static bool isExpeditionMode(out ExpeditionGameMode gameMode)
         {
-            gameMode = null;
+            gameMode = null!;
             if (OnlineManager.lobby != null && OnlineManager.lobby.gameMode is ExpeditionGameMode sgm)
             {
                 gameMode = sgm;

@@ -18,7 +18,7 @@ namespace RainMeadow
             if (!(ExpeditionData.challengeList[index] is PinChallenge)) throw new InvalidProgrammerException("not pin challenge");
 
             crit.creature.Realize();
-            var cl = ExpeditionData.challengeList[index] as PinChallenge;
+            var cl = (PinChallenge)ExpeditionData.challengeList[index];
             if (!cl.pinList.Contains(crit.realizedCreature))
             {
                 cl.pinList.Add(crit.realizedCreature);

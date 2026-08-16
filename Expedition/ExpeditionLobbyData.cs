@@ -54,7 +54,7 @@ namespace RainMeadow
             public State() { }
             public State(ExpeditionLobbyData expeditionLobbyData, OnlineResource onlineResource)
             {                
-                ExpeditionGameMode expeditionGameMode = (onlineResource as Lobby).gameMode as ExpeditionGameMode;
+                ExpeditionGameMode expeditionGameMode = (ExpeditionGameMode)((Lobby)onlineResource).gameMode;
                 RainWorldGame currentGameState = RWCustom.Custom.rainWorld.processManager.currentMainLoop as RainWorldGame;
 
                 PlayerState ps = currentGameState?.Players[0].state as PlayerState;
@@ -112,12 +112,12 @@ namespace RainMeadow
 
             public override void ReadTo(ResourceData data, OnlineResource resource)
             {                
-                Lobby lobby = (resource as Lobby);
-                ExpeditionGameMode expedition = (lobby.gameMode as ExpeditionGameMode);
+                Lobby lobby = (Lobby)resource;
+                ExpeditionGameMode expedition = (ExpeditionGameMode)lobby.gameMode;
                 expedition.currentCampaign = currentCampain;
 
-                RainWorldGame currentGameState = RWCustom.Custom.rainWorld.processManager.currentMainLoop as RainWorldGame;
-                if (currentGameState is not null)
+                //RainWorldGame currentGameState = RWCustom.Custom.rainWorld.processManager.currentMainLoop as RainWorldGame;
+                if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame currentGameState)
                 {
                     PlayerState ps = (PlayerState)currentGameState.Players[0].state; // TODO: jolly support
 
@@ -171,6 +171,7 @@ namespace RainMeadow
                 }                
             }
         }
+
         public class ExpeditionDataState : Serializer.ICustomSerializable
         {
             public List<Challenge> currentChallengeList = new List<Challenge>();
@@ -182,22 +183,7 @@ namespace RainMeadow
             public string startingDen;
             public bool newGame = false;
             public bool validateQuests = true;
-            // public bool hasViewedManual = false;
-
-            // public bool devMode = false;
-            // public int saveSlot;
-            //npublic int[] ints;
-
-            // public int level; // remove
-            // public int currentPoints; // remove
-            // public int perkLimit = 1;
-            // public int totalPoints;
-            // public int totalChallengesCompleted; // remove
-            // public int totalHiddenChallengesCompleted; // remove
-            // public int totalWins;
-
-            // public string menuSong;
-
+            
             public ExpeditionDataState()
             {            
                 if (ExpeditionOnlineMenu.expeditionGameMode is not null && ExpeditionOnlineMenu.expeditionGameMode.currentCampaign is not null) // hmmm
@@ -211,22 +197,7 @@ namespace RainMeadow
                 challengeDifficulty = ExpeditionData.challengeDifficulty;
                 startingDen = ExpeditionData.startingDen;
                 newGame = ExpeditionData.newGame;
-                validateQuests = ExpeditionData.validateQuests;
-                // hasViewedManual = ExpeditionData.hasViewedManual;
-
-                // devMode = ExpeditionData.devMode;
-                // saveSlot = ExpeditionData.saveSlot;
-                // ints = ExpeditionData.ints;
-
-                // level = ExpeditionData.level;
-                // currentPoints = ExpeditionData.currentPoints;
-                // perkLimit = ExpeditionData.perkLimit;
-                // totalPoints = ExpeditionData.totalPoints;
-                // totalChallengesCompleted = ExpeditionData.totalHiddenChallengesCompleted;
-                // totalHiddenChallengesCompleted = ExpeditionData.totalHiddenChallengesCompleted;
-                // totalWins = ExpeditionData.totalWins;
-
-               // menuSong = ExpeditionData.menuSong;                
+                validateQuests = ExpeditionData.validateQuests;                
             }
 
             public void CreateSaveData(SlugcatStats.Name currentCampaign)
@@ -238,25 +209,10 @@ namespace RainMeadow
                 ExpeditionData.startingDen = startingDen;
                 ExpeditionData.newGame = newGame;
                 ExpeditionData.validateQuests = validateQuests;
-                // ExpeditionData.hasViewedManual = hasViewedManual;
-
-                // ExpeditionData.devMode = devMode;
-                // ExpeditionData.saveSlot = saveSlot;
-                // ExpeditionData.ints = ints;
-
-                // ExpeditionData.level = level;
-                // ExpeditionData.currentPoints = currentPoints;
-                // ExpeditionData.perkLimit = perkLimit;
-                // ExpeditionData.totalPoints = totalPoints;
-                // ExpeditionData.totalHiddenChallengesCompleted = totalChallengesCompleted;
-                // ExpeditionData.totalHiddenChallengesCompleted = totalHiddenChallengesCompleted;
-                // ExpeditionData.totalWins = totalWins;
-
-                // ExpeditionData.menuSong = menuSong;
-
+                
                 if (ExpeditionGame.expeditionComplete) return; // r3n: in the win screen, current challenge list is used to set completed challenges, overriting it before complete challege setup crash the ending
 
-                var rwg = RWCustom.Custom.rainWorld.processManager.currentMainLoop as RainWorldGame;
+                //var rwg = RWCustom.Custom.rainWorld.processManager.currentMainLoop as RainWorldGame;
 
                 if (ExpeditionData.allChallengeLists[currentCampaign].Count != currentChallengeList.Count)
                 {                    
@@ -264,7 +220,6 @@ namespace RainMeadow
                     // r3n: current challenge list here have null game and completed could be true, should I set game and call update description here and early return?
                     // return;
                 }
-
 
                 for (int i = 0; i < currentChallengeList.Count; i++)
                 {
@@ -277,7 +232,7 @@ namespace RainMeadow
 
                     challenge[i] = currentChallengeList[i];
 
-                    if (rwg is not null)
+                    if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame rwg)
                     {
                         challenge[i].game = rwg;
                         bool newCompleteState = challenge[i].completed;
@@ -302,90 +257,78 @@ namespace RainMeadow
                     if (item is Expedition.AchievementChallenge)
                     {                        
                         serializer.writer.Write(0);
-                        serializer.writer.Write((item as AchievementChallenge).ID.value); // 
+                        serializer.writer.Write(((AchievementChallenge)item).ID.value); // 
                     }
                     else if (item is Expedition.CycleScoreChallenge)
                     {                     
                         serializer.writer.Write(1);
-                        serializer.writer.Write((item as CycleScoreChallenge).increase); //
-                        int len = (item as CycleScoreChallenge).killScores?.Length ?? -1;
-                        serializer.writer.Write(len);
-                        for (int i = 0; i < len; i++)
-                        {
-                            //   serializer.writer.Write((item as CycleScoreChallenge).killScores[i]);
-                        }
-                        serializer.writer.Write((item as CycleScoreChallenge).score);
-                        serializer.writer.Write((item as CycleScoreChallenge).target);
+                        serializer.writer.Write(((CycleScoreChallenge)item).increase); //
+                        // int len = ((CycleScoreChallenge)item).killScores?.Length ?? -1;
+                        // serializer.writer.Write(len);                        
+                        serializer.writer.Write(((CycleScoreChallenge)item).score);
+                        serializer.writer.Write(((CycleScoreChallenge)item).target);
                     }
                     else if (item is Expedition.EchoChallenge)
                     {                        
                         serializer.writer.Write(2);                     
-                        serializer.writer.Write((item as EchoChallenge).ghost.value);
+                        serializer.writer.Write(((EchoChallenge)item).ghost.value);
                     }
                     else if (item is Expedition.GlobalScoreChallenge)
                     {                        
                         serializer.writer.Write(3);                     
-                        serializer.writer.Write((item as GlobalScoreChallenge).increase);
-                        int len = (item as GlobalScoreChallenge).killScores?.Length ?? -1;
-                        serializer.writer.Write(len);
-                        for (int i = 0; i < len; i++)
-                        {
-                            //serializer.writer.Write((item as GlobalScoreChallenge).killScores[i]);
-                        }
-                        serializer.writer.Write((item as GlobalScoreChallenge).score);
-                        serializer.writer.Write((item as GlobalScoreChallenge).target);
+                        serializer.writer.Write(((GlobalScoreChallenge)item).increase);
+                        // int len = ((GlobalScoreChallenge)item).killScores?.Length ?? -1;
+                        // serializer.writer.Write(len);
+                        serializer.writer.Write(((GlobalScoreChallenge)item).score);
+                        serializer.writer.Write(((GlobalScoreChallenge)item).target);
                     }
                     else if (item is Expedition.HuntChallenge)
                     {                        
                         serializer.writer.Write(4);                        
-                        serializer.writer.Write((item as HuntChallenge).amount);
-                        serializer.writer.Write((item as HuntChallenge).current);
-                        serializer.writer.Write((item as HuntChallenge).target.value); //creatureTemplate.type to string                                
+                        serializer.writer.Write(((HuntChallenge)item).amount);
+                        serializer.writer.Write(((HuntChallenge)item).current);
+                        serializer.writer.Write(((HuntChallenge)item).target.value); //creatureTemplate.type to string                                
                     }
                     else if (item is Expedition.ItemHoardChallenge)
                     {                     
                         serializer.writer.Write(5);                        
-                        serializer.writer.Write((item as ItemHoardChallenge).amount);
-                        serializer.writer.Write((item as ItemHoardChallenge).target.value);
+                        serializer.writer.Write(((ItemHoardChallenge)item).amount);
+                        serializer.writer.Write(((ItemHoardChallenge)item).target.value);
                     }
                     else if (item is Expedition.NeuronDeliveryChallenge)
                     {                        
                         serializer.writer.Write(6);                     
-                        serializer.writer.Write((item as NeuronDeliveryChallenge).delivered);
-                        serializer.writer.Write((item as NeuronDeliveryChallenge).neurons);
+                        serializer.writer.Write(((NeuronDeliveryChallenge)item).delivered);
+                        serializer.writer.Write(((NeuronDeliveryChallenge)item).neurons);
                     }
                     else if (item is Expedition.PearlDeliveryChallenge)
                     {                        
                         serializer.writer.Write(7);
-                        serializer.writer.Write((item as PearlDeliveryChallenge).iterator);
-                        serializer.writer.Write((item as PearlDeliveryChallenge).region);
+                        serializer.writer.Write(((PearlDeliveryChallenge)item).iterator);
+                        serializer.writer.Write(((PearlDeliveryChallenge)item).region);
                     }
                     else if (item is Expedition.PearlHoardChallenge)
                     {                     
                         serializer.writer.Write(8);                     
-                        serializer.writer.Write((item as PearlHoardChallenge).amount);
-                        serializer.writer.Write((item as PearlHoardChallenge).common);
-                        serializer.writer.Write((item as PearlHoardChallenge).region);
+                        serializer.writer.Write(((PearlHoardChallenge)item).amount);
+                        serializer.writer.Write(((PearlHoardChallenge)item).common);
+                        serializer.writer.Write(((PearlHoardChallenge)item).region);
                     }
                     else if (item is Expedition.PinChallenge)
                     {                        
                         serializer.writer.Write(9);
-                        serializer.writer.Write((item as PinChallenge).current);
-                        serializer.writer.Write((item as PinChallenge).target);
-
-                        // int plen = (item as PinChallenge).pinList.Count;
-                        // serializer.writer.Write(plen); // will create an 0 len array                        
-                        // serializer.writer.Write((item as PinChallenge).spearList.Count); // will create an 0 len array
+                        serializer.writer.Write(((PinChallenge)item).current);
+                        serializer.writer.Write(((PinChallenge)item).target);
                     }
                     else if (item is Expedition.VistaChallenge)
                     {                        
                         serializer.writer.Write(10);
-                        serializer.writer.Write((item as VistaChallenge).location.x);
-                        serializer.writer.Write((item as VistaChallenge).location.y);
-                        serializer.writer.Write((item as VistaChallenge).region);
-                        serializer.writer.Write((item as VistaChallenge).room);
+                        serializer.writer.Write(((VistaChallenge)item).location.x);
+                        serializer.writer.Write(((VistaChallenge)item).location.y);
+                        serializer.writer.Write(((VistaChallenge)item).region);
+                        serializer.writer.Write(((VistaChallenge)item).room);
                     }
-                    else // throw new InvalidProgrammerException($"hmmm, i dont recognize this challenge type: {item}");
+                    else
                     {
                         // custom Challenge
                         serializer.writer.Write(10);
@@ -411,7 +354,6 @@ namespace RainMeadow
                     {
                         case 0:
                         {
-
                             var _ID = (WinState.EndgameID)ExtEnumBase.Parse(typeof(WinState.EndgameID), serializer.reader.ReadString(), false);
                             var _revealCheck = serializer.reader.ReadBoolean();
                             var _revealCheckDelay = serializer.reader.ReadInt32();
@@ -434,12 +376,11 @@ namespace RainMeadow
                         }
                         case 1:
                         {
-
                             var _increase = serializer.reader.ReadInt32();
 
-                            int ks = serializer.reader.ReadInt32();
-                            int[] _killScores = null;
-                            if (ks >= 0) _killScores = new int[ks];
+                            // int ks = serializer.reader.ReadInt32();
+                            // int[] _killScores = null!;
+                            // if (ks >= 0) _killScores = new int[ks];
 
                             var _score = serializer.reader.ReadInt32();
                             var _target = serializer.reader.ReadInt32();
@@ -454,7 +395,7 @@ namespace RainMeadow
                             {
 
                                 increase = _increase,
-                                killScores = _killScores,
+                                // killScores = _killScores,
                                 score = _score,
                                 target = _target,
                                 revealCheck = _revealCheck,
@@ -490,12 +431,11 @@ namespace RainMeadow
                         }
                         case 3:
                         {
-
                             var _increase = serializer.reader.ReadInt32();
 
-                            int ks = serializer.reader.ReadInt32();
-                            int[] _killScores = null;
-                            if (ks >= 0) _killScores = new int[ks];
+                            // int ks = serializer.reader.ReadInt32();
+                            //int[] _killScores = null!;
+                            //if (ks >= 0) _killScores = new int[ks];
 
                             var _score = serializer.reader.ReadInt32();
                             var _target = serializer.reader.ReadInt32();
@@ -509,7 +449,7 @@ namespace RainMeadow
                             c = new GlobalScoreChallenge()
                             {
                                 increase = _increase,
-                                killScores = _killScores,
+                                // killScores = _killScores,
                                 score = _score,
                                 target = _target,
                                 revealCheck = _revealCheck,
@@ -670,7 +610,6 @@ namespace RainMeadow
                         }
                         case 10:
                         {
-
                             var _location = new UnityEngine.Vector2(serializer.reader.ReadSingle(), serializer.reader.ReadSingle());
                             var _region = serializer.reader.ReadString();
                             var _room = serializer.reader.ReadString();
@@ -722,22 +661,7 @@ namespace RainMeadow
 
                     serializer.writer.Write(startingDen ?? ""); //string 
                     serializer.writer.Write(newGame);//bool 
-                    serializer.writer.Write(validateQuests);//bool 
-                    // serializer.writer.Write(hasViewedManual);//bool 
-
-                    // serializer.writer.Write(devMode);//bool 
-                    // serializer.writer.Write(saveSlot);  //int 
-
-                    // serializer.writer.Write(level); // int  
-                    // serializer.writer.Write(currentPoints);  // int  
-                    // serializer.writer.Write(perkLimit);// int  
-                    // serializer.writer.Write(totalPoints);  // int  
-                    // serializer.writer.Write(totalChallengesCompleted); ; // int  
-                    // serializer.writer.Write(totalHiddenChallengesCompleted);  // int  
-                    // serializer.writer.Write(totalWins); // int  
-
-                    //serializer.writer.Write(menuSong ?? "");//string 
-
+                    serializer.writer.Write(validateQuests);//bool                     
                 }
                 if (serializer.IsReading)
                 {                    
@@ -751,93 +675,16 @@ namespace RainMeadow
                     for (int i = 0; i < unlocksCount; i++)
                     {
                         activeUnlocks.Add(serializer.reader.ReadString());
-
                     }
 
                     string temp = serializer.reader.ReadString();//float 
                     activeMission = temp;// == "null" ? null : temp;
 
-
                     startingDen = serializer.reader.ReadString(); //string 
                     newGame = serializer.reader.ReadBoolean();//bool 
-                    validateQuests = serializer.reader.ReadBoolean();//bool 
-                    // hasViewedManual = serializer.reader.ReadBoolean();//bool 
-                                                                      //allEarnedPassages = serializer.reader.Read();// Dictionary<string, int> 
-                    // devMode = serializer.reader.ReadBoolean();//bool 
-                    // saveSlot = serializer.reader.ReadInt32(); //int 
-
-                    // level = serializer.reader.ReadInt32(); // int  
-                    // currentPoints = serializer.reader.ReadInt32(); ; // int  
-                    // perkLimit = serializer.reader.ReadInt32();// int  
-                    // totalPoints = serializer.reader.ReadInt32(); // int  
-                    // totalChallengesCompleted = serializer.reader.ReadInt32(); // int  
-                    // totalHiddenChallengesCompleted = serializer.reader.ReadInt32(); // int  
-                    // totalWins = serializer.reader.ReadInt32(); // int  
-
-                    // menuSong = serializer.reader.ReadString();//string 
+                    validateQuests = serializer.reader.ReadBoolean();//bool              
                 }               
             }
-
-            //public static bool operator !=(ExpeditionDataState? left, ExpeditionDataState? right) => !(left == right);
-
-            //public static bool operator ==(ExpeditionDataState? left, ExpeditionDataState? right)
-            //{
-            //    if (left is null) return right is null;
-            //    if (right is null) return false;
-            //    return left.Compare(right);
-            //}
-            //public bool Compare(ExpeditionDataState other)
-            //{                
-            //    var comparativo = true;
-            //    r3n.Log($"comparativo begin");
-            //    if (currentChallengeList.Count != other.currentChallengeList.Count) comparativo = false;
-            //    r3n.Log($"challengeListCount: {currentChallengeList.Count} {comparativo}");
-            //    if (activeUnlocks.Count != other.activeUnlocks.Count) comparativo = false;
-            //    r3n.Log($"activeUnlocks: {activeUnlocks.Count} {comparativo}");
-
-            //    for (int i = 0; i < currentChallengeList.Count; i++)
-            //    {
-            //        comparativo = comparativo && currentChallengeList[i].description == other.currentChallengeList[i].description;
-            //        r3n.Log($"currentChallengeList[{i}].description: {currentChallengeList[i].description} {comparativo}");
-            //        r3n.Log($"other.currentChallengeList[{i}].description: {other.currentChallengeList[i].description} {comparativo}");
-            //        comparativo = comparativo && currentChallengeList[i].completed == other.currentChallengeList[i].completed;
-            //        r3n.Log($"currentChallengeList[{i}].completed: {currentChallengeList[i].completed} {comparativo}");
-            //        r3n.Log($"currentChallengeList[{i}].completed: {other.currentChallengeList[i].completed} {comparativo}");
-            //    }
-
-            //    for (int i = 0; i < activeUnlocks.Count; i++)
-            //    {
-            //        comparativo = comparativo && activeUnlocks[i] == other.activeUnlocks[i];
-            //    }
-
-            //    comparativo = comparativo &&
-            ////(currentChallengeList == other.currentChallengeList) &&
-            ////(activeUnlocks == other.activeUnlocks) &&
-            //(activeMission == other.activeMission) &&
-            ////(completedChallengeList == other.completedChallengeList) &&
-            //(challengeDifficulty == other.challengeDifficulty) &&
-            //(startingDen == other.startingDen) &&
-            //(newGame == other.newGame) &&
-            //(validateQuests == other.validateQuests) &&
-            //(hasViewedManual == other.hasViewedManual) &&
-            //(devMode == other.devMode) &&
-            //(saveSlot == other.saveSlot) &&
-            //(ints == other.ints) &&
-            //(level == other.level) &&
-            //(currentPoints == other.currentPoints) &&
-            //(perkLimit == other.perkLimit) &&
-            //(totalPoints == other.totalPoints) &&
-            //(totalChallengesCompleted == other.totalChallengesCompleted) &&
-            //(totalHiddenChallengesCompleted == other.totalHiddenChallengesCompleted) &&
-            //(totalWins == other.totalWins) &&
-            //(menuSong == other.menuSong);
-
-            //    r3n.Log($"comparativo: {comparativo}");
-            //    return comparativo;
-            //}
-
-
         }
-
     }
 }
