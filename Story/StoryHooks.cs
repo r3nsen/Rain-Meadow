@@ -1780,12 +1780,12 @@ namespace RainMeadow
 
         private void SaveStateHandler(PlayerProgression self, StoryGameMode storyGameMode, RainWorldGame game)
         {
-            RainMeadow.Debug("story: found loaded game state");            
+            RainMeadow.Debug("story: found loaded game state");
             // Begin story meadow insertion
             inVoidSea = false;
             if (OnlineManager.lobby.isOwner)
             {
-                storyGameMode.saveStateString = SaveStateToString(self.currentSaveState);                
+                storyGameMode.saveStateString = SaveStateToString(self.currentSaveState);
             }
             else
             {
@@ -1840,16 +1840,17 @@ namespace RainMeadow
             // end story meadow insertion
         }
         private SaveState PlayerProgression_GetOrInitiateSaveState(On.PlayerProgression.orig_GetOrInitiateSaveState orig, PlayerProgression self, SlugcatStats.Name saveStateNumber, RainWorldGame game, ProcessManager.MenuSetup setup, bool saveAsDeathOrQuit)
-        {            
+        {
             if (OnlineManager.lobby == null)
             {
                 return orig(self, saveStateNumber, game, setup, saveAsDeathOrQuit);
-            }         
+            }
             if (RainMeadow.isStoryMode(out var storyGameMode))
-            {                
+            {
                 RainMeadow.Debug("story: initiating save state!");
                 if (self.currentSaveState == null && self.starvedSaveState != null && game != null && (!ModManager.MSC || game.manager.artificerDreamNumber == -1))
-                {                    
+                {
+                    Custom.Log("LOADING STARVED STATE");
                     self.currentSaveState = self.starvedSaveState;
                     self.currentSaveState.deathPersistentSaveData.winState.ResetLastShownValues();
                     self.starvedSaveState = null;
@@ -1896,15 +1897,15 @@ namespace RainMeadow
                 return self.currentSaveState;
 
             }
-            
             return orig(self, saveStateNumber, game, setup, saveAsDeathOrQuit);
         }
 
         private bool PlayerProgression_SaveToDisk(On.PlayerProgression.orig_SaveToDisk orig, PlayerProgression self, bool saveCurrentState, bool saveMaps, bool saveMiscProg)
-        {            
-            if ((isStoryMode(out var storyGameMode) && !storyGameMode.saveToDisk)) return false;
+        {
+            if (isStoryMode(out var storyGameMode) && !storyGameMode.saveToDisk) return false;
             return orig(self, saveCurrentState, saveMaps, saveMiscProg);
         }
+
         private void SaveState_SessionEnded(On.SaveState.orig_SessionEnded orig, SaveState self, RainWorldGame game, bool survived, bool newMalnourished)
         {
             if (isStoryMode(out var storyGameMode))
@@ -2010,7 +2011,6 @@ namespace RainMeadow
                     }
                 }
             }
-          
             orig(self, sender, message);
         }
 

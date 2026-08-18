@@ -1777,9 +1777,9 @@ public partial class RainMeadow
     }
 
     private void Player_AddFood(On.Player.orig_AddFood orig, Player self, int add)
-    {        
+    {
         if (OnlineManager.lobby is null || !sUpdateFood)
-        {     
+        {
             orig(self, add);
             return;
         }
@@ -1791,7 +1791,7 @@ public partial class RainMeadow
             return;
         }
 
-        if (!onlineEntity.isMine) return;        
+        if (!onlineEntity.isMine) return;
 
         var state = (isStoryMode(out _) && !self.isNPC) ? (PlayerState)self.abstractCreature.world.game.Players[0].state : (PlayerState)self.State;
         var origFood = state.foodInStomach * 4 + state.quarterFoodPoints;

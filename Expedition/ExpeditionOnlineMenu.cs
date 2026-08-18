@@ -41,11 +41,12 @@ namespace RainMeadow
                 : ButtonScroller.TextAnchor.Top;
 
             SetupOnlineMenuItens();
-            
+
             ChatTextBox.OnShutDownRequest += ResetChatInput;
             ChatLogManager.Subscribe(this);
 
         }
+
         void SetupOnlineMenuItens()
         {
             lobbyLabel = new MenuLabel(this, pages[1], Translate("LOBBY"), new Vector2(194, 553), new(110, 30), true);
@@ -63,6 +64,7 @@ namespace RainMeadow
             };
             pages[0].subObjects.Add(toggleChat);
         }
+
         public override void Update()
         {
             if (nullLobbyError != null)
@@ -164,27 +166,29 @@ namespace RainMeadow
                         currentLogIndex--;
                         UpdateLogDisplay();
                     }
-
                 }
             }
         }
+
         public static Menu.SlugcatSelectMenu.SaveGameData getSaveState()
         {
             return expeditionGameMode.menuSaveGameData;
         }
+
         public void SetCampaign(SlugcatStats.Name campaign)
         {
             if (expeditionGameMode.currentCampaign == campaign && expeditionGameMode.menuSaveGameData != null) return;
             expeditionGameMode.currentCampaign = campaign;
-            
+
             SaveGameData sgd = MineForSaveData(RWCustom.Custom.rainWorld.processManager, campaign);
 
             if (sgd is not null)
                 expeditionGameMode.menuSaveState = new StoryLobbyData.MenuSaveStateState(sgd);
             else
                 expeditionGameMode.menuSaveState = null;
-            
+
         }
+
         public override void ShutDownProcess()
         {
             isChatToggled = false;

@@ -1,16 +1,9 @@
 ﻿using Expedition;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace RainMeadow
 {
     public static class ExpeditionRPC
     {
-
         [RPCMethod]
         public static void challengeCreaturePinned(int index, OnlineCreature crit)
         {
@@ -30,11 +23,10 @@ namespace RainMeadow
         [RPCMethod]
         public static void challengeCreatureKilled(int index, OnlineCreature crit, int pNum)
         {
-
             if (!(RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame)) return;
 
             crit.creature.Realize();
-            ExpeditionData.challengeList[index].CreatureKilled(crit.realizedCreature, pNum);            
+            ExpeditionData.challengeList[index].CreatureKilled(crit.realizedCreature, pNum);
         }
 
         [RPCMethod]
@@ -48,7 +40,7 @@ namespace RainMeadow
         public static void SlowTimePerk()
         {
             if (!(RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame)) return;
-                
+
             for (int i = 0; i < ExpeditionGame.unlockTrackers.Count; i++)
             {
                 if (ExpeditionGame.unlockTrackers[i] is ExpeditionGame.SlowTimeTracker stt)

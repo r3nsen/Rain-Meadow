@@ -1,7 +1,4 @@
 ﻿using Expedition;
-
-using RainMeadow;
-
 using System;
 using System.Collections.Generic;
 
@@ -16,11 +13,11 @@ namespace RainMeadow
         {
             return new State(this, resource);
         }
+
         public class State : ResourceDataState
         {
             [OnlineField(nullable = true, group = "expeditiondata")]
             ExpeditionDataState? expeditionDataState;
-
 
             [OnlineField]
             SlugcatStats.Name currentCampain;
@@ -53,7 +50,7 @@ namespace RainMeadow
 
             public State() { }
             public State(ExpeditionLobbyData expeditionLobbyData, OnlineResource onlineResource)
-            {                
+            {
                 ExpeditionGameMode expeditionGameMode = (ExpeditionGameMode)((Lobby)onlineResource).gameMode;
                 RainWorldGame currentGameState = RWCustom.Custom.rainWorld.processManager.currentMainLoop as RainWorldGame;
 
@@ -102,7 +99,7 @@ namespace RainMeadow
                     {
                         isChallengeCompleted[i] = ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted[i] = expeditionDataState.currentChallengeList[i].completed;
                     }
-                }                
+                }
             }
 
             public override Type GetDataType()
@@ -111,7 +108,7 @@ namespace RainMeadow
             }
 
             public override void ReadTo(ResourceData data, OnlineResource resource)
-            {                
+            {
                 Lobby lobby = (Lobby)resource;
                 ExpeditionGameMode expedition = (ExpeditionGameMode)lobby.gameMode;
                 expedition.currentCampaign = currentCampain;
@@ -168,7 +165,7 @@ namespace RainMeadow
                 if (ExpeditionOnlineMenu.expeditionGameMode is not null)
                 {
                     ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted = isChallengeCompleted;
-                }                
+                }
             }
         }
 
@@ -177,15 +174,15 @@ namespace RainMeadow
             public List<Challenge> currentChallengeList = new List<Challenge>();
             public List<string> activeUnlocks = new List<string>();
 
-            public string activeMission;            
+            public string activeMission;
 
             public float challengeDifficulty = 0.5f;
             public string startingDen;
             public bool newGame = false;
             public bool validateQuests = true;
-            
+
             public ExpeditionDataState()
-            {            
+            {
                 if (ExpeditionOnlineMenu.expeditionGameMode is not null && ExpeditionOnlineMenu.expeditionGameMode.currentCampaign is not null) // hmmm
                 {
                     currentChallengeList = ExpeditionData.allChallengeLists[ExpeditionOnlineMenu.expeditionGameMode.currentCampaign]; // seems like currentCampaign could be null - oh, jukebox can set this to null too? i had a bug where host was on jukebox and client on infinite loop trying to join until esc
@@ -197,7 +194,7 @@ namespace RainMeadow
                 challengeDifficulty = ExpeditionData.challengeDifficulty;
                 startingDen = ExpeditionData.startingDen;
                 newGame = ExpeditionData.newGame;
-                validateQuests = ExpeditionData.validateQuests;                
+                validateQuests = ExpeditionData.validateQuests;
             }
 
             public void CreateSaveData(SlugcatStats.Name currentCampaign)
@@ -210,13 +207,13 @@ namespace RainMeadow
                 ExpeditionData.startingDen = startingDen;
                 ExpeditionData.newGame = newGame;
                 ExpeditionData.validateQuests = validateQuests;
-                
+
                 if (ExpeditionGame.expeditionComplete) return; // r3n: in the win screen, current challenge list is used to set completed challenges, overriting it before complete challege setup crash the ending
 
                 //var rwg = RWCustom.Custom.rainWorld.processManager.currentMainLoop as RainWorldGame;
 
                 if (!ExpeditionData.allChallengeLists.ContainsKey(currentCampaign) || ExpeditionData.allChallengeLists[currentCampaign].Count != currentChallengeList.Count)
-                {                    
+                {
                     ExpeditionData.allChallengeLists[currentCampaign] = currentChallengeList;// new List<Challenge>(currentChallengeList.Count);                    
                     // r3n: current challenge list here have null game and completed could be true, should I set game and call update description here and early return?
                     // return;
@@ -251,17 +248,17 @@ namespace RainMeadow
             }
 
             public void writeChallengeList(Serializer serializer, List<Challenge> challengeList)
-            {                             
-                serializer.writer.Write(challengeList.Count);                
+            {
+                serializer.writer.Write(challengeList.Count);
                 foreach (var item in challengeList)
                 {
                     if (item is Expedition.AchievementChallenge)
-                    {                        
+                    {
                         serializer.writer.Write(0);
                         serializer.writer.Write(((AchievementChallenge)item).ID.value); // 
                     }
                     else if (item is Expedition.CycleScoreChallenge)
-                    {                     
+                    {
                         serializer.writer.Write(1);
                         serializer.writer.Write(((CycleScoreChallenge)item).increase); //
                         // int len = ((CycleScoreChallenge)item).killScores?.Length ?? -1;
@@ -270,13 +267,13 @@ namespace RainMeadow
                         serializer.writer.Write(((CycleScoreChallenge)item).target);
                     }
                     else if (item is Expedition.EchoChallenge)
-                    {                        
-                        serializer.writer.Write(2);                     
+                    {
+                        serializer.writer.Write(2);
                         serializer.writer.Write(((EchoChallenge)item).ghost.value);
                     }
                     else if (item is Expedition.GlobalScoreChallenge)
-                    {                        
-                        serializer.writer.Write(3);                     
+                    {
+                        serializer.writer.Write(3);
                         serializer.writer.Write(((GlobalScoreChallenge)item).increase);
                         // int len = ((GlobalScoreChallenge)item).killScores?.Length ?? -1;
                         // serializer.writer.Write(len);
@@ -284,45 +281,45 @@ namespace RainMeadow
                         serializer.writer.Write(((GlobalScoreChallenge)item).target);
                     }
                     else if (item is Expedition.HuntChallenge)
-                    {                        
-                        serializer.writer.Write(4);                        
+                    {
+                        serializer.writer.Write(4);
                         serializer.writer.Write(((HuntChallenge)item).amount);
                         serializer.writer.Write(((HuntChallenge)item).current);
                         serializer.writer.Write(((HuntChallenge)item).target.value); //creatureTemplate.type to string                                
                     }
                     else if (item is Expedition.ItemHoardChallenge)
-                    {                     
-                        serializer.writer.Write(5);                        
+                    {
+                        serializer.writer.Write(5);
                         serializer.writer.Write(((ItemHoardChallenge)item).amount);
                         serializer.writer.Write(((ItemHoardChallenge)item).target.value);
                     }
                     else if (item is Expedition.NeuronDeliveryChallenge)
-                    {                        
-                        serializer.writer.Write(6);                     
+                    {
+                        serializer.writer.Write(6);
                         serializer.writer.Write(((NeuronDeliveryChallenge)item).delivered);
                         serializer.writer.Write(((NeuronDeliveryChallenge)item).neurons);
                     }
                     else if (item is Expedition.PearlDeliveryChallenge)
-                    {                        
+                    {
                         serializer.writer.Write(7);
                         serializer.writer.Write(((PearlDeliveryChallenge)item).iterator);
                         serializer.writer.Write(((PearlDeliveryChallenge)item).region);
                     }
                     else if (item is Expedition.PearlHoardChallenge)
-                    {                     
-                        serializer.writer.Write(8);                     
+                    {
+                        serializer.writer.Write(8);
                         serializer.writer.Write(((PearlHoardChallenge)item).amount);
                         serializer.writer.Write(((PearlHoardChallenge)item).common);
                         serializer.writer.Write(((PearlHoardChallenge)item).region);
                     }
                     else if (item is Expedition.PinChallenge)
-                    {                        
+                    {
                         serializer.writer.Write(9);
                         serializer.writer.Write(((PinChallenge)item).current);
                         serializer.writer.Write(((PinChallenge)item).target);
                     }
                     else if (item is Expedition.VistaChallenge)
-                    {                        
+                    {
                         serializer.writer.Write(10);
                         serializer.writer.Write(((VistaChallenge)item).location.x);
                         serializer.writer.Write(((VistaChallenge)item).location.y);
@@ -340,16 +337,17 @@ namespace RainMeadow
                     serializer.writer.Write(item.description);
                     serializer.writer.Write(item.hidden);
                     serializer.writer.Write(item.revealed);
-                }             
+                }
             }
+
             public void readChallengeList(Serializer serializer, out List<Challenge> challenge)
-            {                
-                int count2 = serializer.reader.ReadInt32();                
+            {
+                int count2 = serializer.reader.ReadInt32();
                 challenge = new List<Challenge>(count2);
                 for (int j = 0; j < count2; j++)
                 {
                     int challengeType = serializer.reader.ReadInt32();
-                    
+
                     Challenge c;
                     switch (challengeType)
                     {
@@ -391,7 +389,7 @@ namespace RainMeadow
                             var _description = serializer.reader.ReadString();
                             var _hidden = serializer.reader.ReadBoolean();
                             var _revealed = serializer.reader.ReadBoolean();
-                            
+
                             c = new CycleScoreChallenge()
                             {
 
@@ -445,7 +443,7 @@ namespace RainMeadow
                             var _completed = serializer.reader.ReadBoolean();
                             var _description = serializer.reader.ReadString();
                             var _hidden = serializer.reader.ReadBoolean();
-                            var _revealed = serializer.reader.ReadBoolean();                            
+                            var _revealed = serializer.reader.ReadBoolean();
 
                             c = new GlobalScoreChallenge()
                             {
@@ -638,10 +636,11 @@ namespace RainMeadow
                             throw new NotImplementedException($"challengeType: {challengeType}");
                     }
                     challenge.Add(c);
-                }                
+                }
             }
+
             public void CustomSerialize(Serializer serializer)
-            {                                                
+            {
                 if (serializer.IsWriting)
                 {
                     serializer.writer.Write(challengeDifficulty);//float              
@@ -665,11 +664,11 @@ namespace RainMeadow
                     serializer.writer.Write(validateQuests);//bool                     
                 }
                 if (serializer.IsReading)
-                {                    
+                {
                     challengeDifficulty = serializer.reader.ReadSingle();//float 
 
                     readChallengeList(serializer, out currentChallengeList);
-                    
+
                     // active unlocks
                     var unlocksCount = serializer.reader.ReadInt32();
                     activeUnlocks = new List<string>(unlocksCount);
@@ -684,7 +683,7 @@ namespace RainMeadow
                     startingDen = serializer.reader.ReadString(); //string 
                     newGame = serializer.reader.ReadBoolean();//bool 
                     validateQuests = serializer.reader.ReadBoolean();//bool              
-                }               
+                }
             }
         }
     }

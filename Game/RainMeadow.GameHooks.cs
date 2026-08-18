@@ -76,7 +76,7 @@ namespace RainMeadow
 
             On.ProcessManager.CueAchievement += ProcessManager_CueAchievement;
 
-            On.GlobalRain.InitDeathRain += GlobalRain_InitDeathRain;            
+            On.GlobalRain.InitDeathRain += GlobalRain_InitDeathRain;
         }
 
         private void RainWorldGame_RawUpdate1(ILContext il)
@@ -435,7 +435,7 @@ namespace RainMeadow
 
             if (isStoryMode(out var story))
             {
-                // synchronize food between all local avatars            
+                // synchronize food between all local avatars
                 PlayerState? first_state = story.avatars[0]?.abstractCreature?.state as PlayerState;
                 Player? first_player = story.avatars[0]?.abstractCreature?.realizedCreature as Player;
                 if (story.lobby.isOwner)
@@ -476,7 +476,7 @@ namespace RainMeadow
             {
                 string cl = OnlineManager.CheatsAllowed ? "" : "\n" + Utils.Translate("Cheats are disabled in this lobby.");
                 self.devToolsLabel.text = self.devToolsLabel.text + $" | Rain Meadow {RainMeadow.MeadowVersionStr} ({MatchmakingManager.currentDomain.value}){cl}";
-            }            
+            }
         }
 
         public bool RainWorldGame_GamePaused(Func<RainWorldGame, bool> orig, RainWorldGame self)

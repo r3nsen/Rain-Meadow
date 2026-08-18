@@ -244,7 +244,7 @@ namespace RainMeadow
                         readyForTransition = ReadyForTransition.Closed;
                     }
                 }
-            }            
+            }
         }
 
         public override void NewResourceOwner(OnlineResource resource, OnlinePlayer? oldOwner, OnlinePlayer? newOwner)

@@ -1,19 +1,11 @@
-﻿using Expedition;
-
-using Menu;
-
-using Mono.Cecil.Cil;
-
-using MonoMod.Cil;
-using MonoMod.RuntimeDetour;
-
-using RainMeadow;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
+using MonoMod.RuntimeDetour;
+using Menu;
+using Expedition;
 
 namespace RainMeadow
 {
@@ -21,16 +13,16 @@ namespace RainMeadow
     {
         public void ExpeditionHooks()
         {
-            
+
             On.Expedition.ExpeditionCoreFile.ExpeditionSaveFileName += ExpeditionCoreFile_ExpeditionSaveFileName;
             On.Expedition.ExpeditionCoreFile.Load += ExpeditionCoreFile_Load;
             On.Menu.SlugcatSelectMenu.MineForSaveData += SlugcatSelectMenu_MineForSaveData;
             On.PlayerProgression.IsThereASavedGame += PlayerProgression_IsThereASavedGame;
-            
+
             On.Menu.ChallengeSelectPage.StartGame += ChallengeSelectPage_StartGame;
             On.Menu.CharacterSelectPage.LoadGame += CharacterSelectPage_LoadGame;
             IL.Menu.CharacterSelectPage.AbandonButton_OnPressDone += CharacterSelectPage_AbandonButton_OnPressDone;
-            
+
             On.Creature.Die += Creature_Die1;
             On.Expedition.Challenge.CompleteChallenge += Challenge_CompleteChallenge;
 
@@ -38,8 +30,8 @@ namespace RainMeadow
             On.Expedition.GlobalScoreChallenge.CreatureKilled += GlobalScoreChallenge_CreatureKilled;
             On.Expedition.HuntChallenge.CreatureKilled += HuntChallenge_CreatureKilled;
             IL.Expedition.PinChallenge.Update += PinChallenge_Update;
-            IL.RainWorldGame.Update += GetChallengeIndex;            
-            
+            IL.RainWorldGame.Update += GetChallengeIndex;
+
             //new Hook(typeof(RainMeadow.RainMeadow).GetMethod("Options_GetSaveFileName_SavOrExp", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance), Options_GetSaveFileName_SavOrExp);
 
             IL.ProcessManager.PreSwitchMainProcess += ProcessManager_PreSwitchMainProcess;
@@ -65,9 +57,10 @@ namespace RainMeadow
                 x => x.MatchBrfalse(out _)
                 );
             c.MoveAfterLabels();
-            
+
             c.Emit(OpCodes.Ldloc_0);
-            c.EmitDelegate((ExpeditionCoreFile self, List<string> list) => {                
+            c.EmitDelegate((ExpeditionCoreFile self, List<string> list) =>
+            {
                 if (OnlineManager.lobby is null || OnlineManager.lobby.isOwner) return false;
 
                 if (!ExpeditionGame.allUnlocks.ContainsKey(ExpeditionData.slugcatPlayer))
@@ -90,12 +83,12 @@ namespace RainMeadow
 
         private List<string> ExpeditionGame_activeUnlocks(Func<List<string>> orig)
         {
-            if(OnlineManager.lobby is null || OnlineManager.lobby.isOwner) return orig();
+            if (OnlineManager.lobby is null || OnlineManager.lobby.isOwner) return orig();
             return ExpeditionOnlineMenu.activeUnlocks;
         }
         private string ExpeditionProgression_UnlockSprite(On.Expedition.ExpeditionProgression.orig_UnlockSprite orig, string key, bool alwaysShow)
         {
-            if(OnlineManager.lobby is null || OnlineManager.lobby.isOwner)
+            if (OnlineManager.lobby is null || OnlineManager.lobby.isOwner)
                 return orig(key, alwaysShow);
             return orig(key, true);
         }
@@ -115,9 +108,9 @@ namespace RainMeadow
                 if (self.game.Players[i].realizedCreature != null)
                 {
                     Player player = (Player)self.game.Players[i].realizedCreature;
-                    
+
                     if (((player.input[0].mp && player.input[1].pckp) || (player.input[0].pckp && player.input[1].mp)) && self.cooldown <= 0f)
-                    {                    
+                    {
                         OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.SlowTimePerk);
                         break;
                     }
@@ -131,7 +124,7 @@ namespace RainMeadow
             c.GotoNext(MoveType.After,
                 x => x.MatchLdarg(1),
                 x => x.MatchLdsfld<ProcessManager.ProcessID>(nameof(ProcessManager.ProcessID.MainMenu)),
-                x => x.MatchCall("ExtEnum`1<ProcessManager/ProcessID>", "op_Equality")                
+                x => x.MatchCall("ExtEnum`1<ProcessManager/ProcessID>", "op_Equality")
                 );
 
             c.Emit(OpCodes.Ldarg_1);
@@ -141,7 +134,7 @@ namespace RainMeadow
 
             });
         }
-       
+
 
         private void PinChallenge_Update(ILContext il)
         {
@@ -170,7 +163,7 @@ namespace RainMeadow
                     getChallengeID(self, out var id);
 
                     var stuckInSpear = (Creature)self.spearList[index].stuckInObject;
-                    
+
                     if (stuckInSpear.abstractCreature.GetOnlineCreature() is OnlineCreature onlineCrit)
                     {
                         OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreaturePinned, id, onlineCrit);
@@ -271,8 +264,8 @@ namespace RainMeadow
             if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
             {
                 getChallengeID(self, out var id);
-                
-                if(crit.abstractCreature.GetOnlineCreature() is OnlineCreature onlineCrit)
+
+                if (crit.abstractCreature.GetOnlineCreature() is OnlineCreature onlineCrit)
                     OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, onlineCrit, playerNumber);
             }
             else
@@ -286,7 +279,7 @@ namespace RainMeadow
             if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
             {
                 getChallengeID(self, out var id);
-                
+
                 if (crit.abstractCreature.GetOnlineCreature() is OnlineCreature onlineCrit)
                     OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, onlineCrit, playerNumber);
             }
@@ -301,7 +294,7 @@ namespace RainMeadow
             if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
             {
                 getChallengeID(self, out var id);
-                
+
                 if (crit.abstractCreature.GetOnlineCreature() is OnlineCreature onlineCrit)
                     OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, onlineCrit, playerNumber);
             }
@@ -316,7 +309,7 @@ namespace RainMeadow
             // r3n: want to use this to inform host all the client kills, this then will be use to sync and separate kills per client on sleep and end screen, also will need to save this info on the savefile
             orig(self);
         }
-        
+
         private void CharacterSelectPage_AbandonButton_OnPressDone(ILContext il)
         {
             var c = new ILCursor(il);
