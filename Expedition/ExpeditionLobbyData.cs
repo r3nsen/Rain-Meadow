@@ -202,7 +202,8 @@ namespace RainMeadow
 
             public void CreateSaveData(SlugcatStats.Name currentCampaign)
             {
-                ExpeditionGame.allUnlocks[currentCampaign] = activeUnlocks;
+                // ExpeditionGame.allUnlocks[currentCampaign] = activeUnlocks;
+                ExpeditionOnlineMenu.activeUnlocks = activeUnlocks;
                 ExpeditionData.activeMission = activeMission;
 
                 ExpeditionData.challengeDifficulty = challengeDifficulty;
@@ -214,7 +215,7 @@ namespace RainMeadow
 
                 //var rwg = RWCustom.Custom.rainWorld.processManager.currentMainLoop as RainWorldGame;
 
-                if (ExpeditionData.allChallengeLists[currentCampaign].Count != currentChallengeList.Count)
+                if (!ExpeditionData.allChallengeLists.ContainsKey(currentCampaign) || ExpeditionData.allChallengeLists[currentCampaign].Count != currentChallengeList.Count)
                 {                    
                     ExpeditionData.allChallengeLists[currentCampaign] = currentChallengeList;// new List<Challenge>(currentChallengeList.Count);                    
                     // r3n: current challenge list here have null game and completed could be true, should I set game and call update description here and early return?

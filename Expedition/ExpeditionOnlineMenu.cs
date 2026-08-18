@@ -2,12 +2,14 @@ using Menu;
 using UnityEngine;
 using Expedition;
 using static Menu.SlugcatSelectMenu;
+using System.Collections.Generic;
 
 namespace RainMeadow
 {
     public partial class ExpeditionOnlineMenu : ExpeditionMenu//, IChatSubscriber
     {
         public static ExpeditionGameMode expeditionGameMode;
+        public static List<string> activeUnlocks;
 
         private CheckBox friendlyFire;
         private CheckBox reqCampaignSlug;

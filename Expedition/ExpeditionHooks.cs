@@ -45,6 +45,59 @@ namespace RainMeadow
             IL.ProcessManager.PreSwitchMainProcess += ProcessManager_PreSwitchMainProcess;
 
             On.Expedition.ExpeditionGame.SlowTimeTracker.Update += SlowTimeTracker_Update;
+            On.Expedition.ExpeditionProgression.UnlockSprite += ExpeditionProgression_UnlockSprite;
+
+            new Hook(typeof(ExpeditionGame).GetProperty(nameof(ExpeditionGame.activeUnlocks)).GetGetMethod(), ExpeditionGame_activeUnlocks);
+            IL.Expedition.ExpeditionCoreFile.ToString += ExpeditionCoreFile_ToString;
+        }
+
+        private void ExpeditionCoreFile_ToString(ILContext il)
+        {
+            var c = new ILCursor(il);
+            var skip = c.DefineLabel();
+            // if (!this.runEnded && global::Expedition.ExpeditionGame.activeUnlocks != null && global::Expedition.ExpeditionGame.activeUnlocks.Count > 0)
+            c.GotoNext(MoveType.Before,
+                // x => x.MatchLdarg(0),
+                x => x.MatchLdfld<ExpeditionCoreFile>("runEnded"),
+                x => x.MatchBrtrue(out skip),
+
+                x => x.MatchCall(typeof(ExpeditionGame).GetProperty(nameof(ExpeditionGame.activeUnlocks)).GetGetMethod()),
+                x => x.MatchBrfalse(out _)
+                );
+            c.MoveAfterLabels();
+            
+            c.Emit(OpCodes.Ldloc_0);
+            c.EmitDelegate((ExpeditionCoreFile self, List<string> list) => {                
+                if (OnlineManager.lobby is null || OnlineManager.lobby.isOwner) return false;
+
+                if (!ExpeditionGame.allUnlocks.ContainsKey(ExpeditionData.slugcatPlayer))
+                {
+                    ExpeditionGame.allUnlocks[ExpeditionData.slugcatPlayer] = new List<string>();
+                }
+
+                List<string> activeUnlocks = ExpeditionGame.allUnlocks[ExpeditionData.slugcatPlayer];
+
+                if (!self.runEnded && activeUnlocks != null && activeUnlocks.Count > 0)
+                {
+                    list.Add(ExpeditionData.slugcatPlayer.value + "#" + self.ActiveUnlocksString(activeUnlocks));
+                }
+                return true;
+            });
+            c.Emit(OpCodes.Brtrue, skip);
+            c.Emit(OpCodes.Ldarg_0);
+            // Info(il);
+        }
+
+        private List<string> ExpeditionGame_activeUnlocks(Func<List<string>> orig)
+        {
+            if(OnlineManager.lobby is null || OnlineManager.lobby.isOwner) return orig();
+            return ExpeditionOnlineMenu.activeUnlocks;
+        }
+        private string ExpeditionProgression_UnlockSprite(On.Expedition.ExpeditionProgression.orig_UnlockSprite orig, string key, bool alwaysShow)
+        {
+            if(OnlineManager.lobby is null || OnlineManager.lobby.isOwner)
+                return orig(key, alwaysShow);
+            return orig(key, true);
         }
 
         private void SlowTimeTracker_Update(On.Expedition.ExpeditionGame.SlowTimeTracker.orig_Update orig, ExpeditionGame.SlowTimeTracker self)
