@@ -41,6 +41,83 @@ namespace RainMeadow
 
             new Hook(typeof(ExpeditionGame).GetProperty(nameof(ExpeditionGame.activeUnlocks)).GetGetMethod(), ExpeditionGame_activeUnlocks);
             IL.Expedition.ExpeditionCoreFile.ToString += ExpeditionCoreFile_ToString;
+            On.Expedition.ExpeditionCoreFile.FromString += unlockAllMeadowMusics;            
+            On.Expedition.ExpeditionProgression.GetUnlockedSongs += ExpeditionProgression_GetUnlockedSongs;
+        }
+
+        private void unlockAllMeadowMusics(On.Expedition.ExpeditionCoreFile.orig_FromString orig, ExpeditionCoreFile self, string saveString)
+        {
+            orig(self, saveString);
+
+            if (OnlineManager.lobby is not null)
+            {
+                var unlockedSongs = Expedition.ExpeditionProgression.GetUnlockedSongs();
+                var cascenKey = unlockedSongs.FirstOrDefault(x => x.Value == "Cascen").Key; // r3n: cascen is so fire
+                if (!Expedition.ExpeditionData.unlockables.Contains(cascenKey))
+                {
+                    int index = int.Parse(cascenKey.Split('-')[1]) - 2;
+                    var meadowMusics = getMeadowMusics();
+                    for (int i = 0; i < 34; i++)
+                    {                        
+                        Expedition.ExpeditionData.unlockables.Add("mus-" + (i + index));
+                        Expedition.ExpeditionData.newSongs.Add("mus-" + (i + index));
+                    }
+                }
+            }
+        }
+        List<string> getMeadowMusics()
+        {
+            List<string> meadowMusics = new List<string>(){
+                    "403rings",
+                    "71104",
+                    "Cascen",
+                    "DustAshWrong",
+                    "Establish",
+                    "Eyes_ Vain",
+                    "Eyto",
+                    "Folkada",
+                    "Grasp",
+                    "Gray Orange",
+                    "Icy Parchment",
+                    "indufor",
+                    "Live more.",
+                    "me",
+                    "MTC",
+                    "Nevertop Side",
+                    "New and new",
+                    "Ones",
+                    "Pedal Petal",
+                    "Porls",
+                    "Purple Puff",
+                    "Significance",
+                    "Slightly Ill",
+                    "Smoothed Ash",
+                    "Soup",
+                    "Swan ode",
+                    "The Crewmate",
+                    "tredjeplanen",
+                    "Triptrap X",
+                    "Trists",
+                    "Void Genesis",
+                    "Walked",
+                    "Well Phoe",
+                    "Woodback",
+                };
+            return meadowMusics;
+        }
+        private Dictionary<string, string> ExpeditionProgression_GetUnlockedSongs(On.Expedition.ExpeditionProgression.orig_GetUnlockedSongs orig)
+        {
+            var unlockedSongs = orig();
+            var meadowMusics = getMeadowMusics();
+            if (OnlineManager.lobby is not null)
+            {
+                int ulen = unlockedSongs.Count;
+                for (int i = 0; i < meadowMusics.Count; i++)
+                {
+                    unlockedSongs["mus-" + Menu.Remix.ValueConverter.ConvertToString<int>(i + 1 + ulen)] = meadowMusics[i];
+                }                
+            }
+            return unlockedSongs;
         }
 
         private void ExpeditionCoreFile_ToString(ILContext il)
