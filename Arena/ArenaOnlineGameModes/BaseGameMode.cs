@@ -186,8 +186,9 @@ namespace RainMeadow
                 RainMeadow.Debug("Unsubscribing from old world");
                 if (roomSession.worldSession.isActive)
                 {
-                    roomSession.worldSession.Deactivate();
+                    // NotNeeded BEFORE Deactivate, otherwise the room sessions never get released
                     roomSession.worldSession.NotNeeded();
+                    roomSession.worldSession.Deactivate();
                 }
 
                 if (roomSession.worldSession.participants.Count > 0)
@@ -808,6 +809,7 @@ namespace RainMeadow
                 0
             );
 
+            abstractCreature.realizedCreature.inShortcut = true;
             shortCutVessel.entranceNode = abstractCreature.pos.abstractNode;
             shortCutVessel.room = self.game.world.GetAbstractRoom(abstractCreature.Room.name);
 
@@ -817,21 +819,19 @@ namespace RainMeadow
             //{
             //a.SpawnSnails(shortCutVessel.room.realizedRoom, shortCutVessel);
             //}
-            if (abstractCreature.realizedCreature is not Player)
+            if (abstractCreature.realizedCreature is not Player player)
             {
                 return;
             }
-            if (
-                (abstractCreature.realizedCreature as Player).SlugCatClass
+            if (player.SlugCatClass
                 == SlugcatStats.Name.Night
             )
             {
-                (abstractCreature.realizedCreature as Player).slugcatStats.throwingSkill = 1;
+                player.slugcatStats.throwingSkill = 1;
             }
             if (ModManager.MSC)
             {
-                if (
-                    (abstractCreature.realizedCreature as Player).SlugCatClass
+                if (player.SlugCatClass
                     == SlugcatStats.Name.Red
                 )
                 {
@@ -849,8 +849,7 @@ namespace RainMeadow
                     );
                 }
 
-                if (
-                    (abstractCreature.realizedCreature as Player).SlugCatClass
+                if (player.SlugCatClass
                     == SlugcatStats.Name.Yellow
                 )
                 {
@@ -868,8 +867,7 @@ namespace RainMeadow
                     );
                 }
 
-                if (
-                    (abstractCreature.realizedCreature as Player).SlugCatClass
+                if (player.SlugCatClass
                     == MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Artificer
                 )
                 {
@@ -887,29 +885,27 @@ namespace RainMeadow
                     );
                 }
 
-                if (
-                    (abstractCreature.realizedCreature as Player).SlugCatClass
+                if (player.SlugCatClass
                     == MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Slugpup
                 )
                 {
-                    (abstractCreature.realizedCreature as Player).slugcatStats.throwingSkill = 1;
+                    player.slugcatStats.throwingSkill = 1;
                 }
 
-                if (
-                    (abstractCreature.realizedCreature as Player).SlugCatClass
+                if (player.SlugCatClass
                     == MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Sofanthiel
                 )
                 {
-                    (abstractCreature.realizedCreature as Player).slugcatStats.throwingSkill =
+                    player.slugcatStats.throwingSkill =
                         arenaOnline.painCatThrowingSkill;
                     RainMeadow.Debug(
                         "ENOT THROWING SKILL "
-                            + (abstractCreature.realizedCreature as Player)
+                            + player
                                 .slugcatStats
                                 .throwingSkill
                     );
                     if (
-                        (abstractCreature.realizedCreature as Player).slugcatStats.throwingSkill
+                        player.slugcatStats.throwingSkill
                             == 0
                         && arenaOnline.painCatEgg
                     )
@@ -954,37 +950,35 @@ namespace RainMeadow
                     }
                 }
 
-                if (
-                    (abstractCreature.realizedCreature as Player).SlugCatClass
+                if (player.SlugCatClass
                     == MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Saint
                 )
                 {
                     if (!arenaOnline.sainot) // ascendance saint
                     {
-                        (abstractCreature.realizedCreature as Player).slugcatStats.throwingSkill =
+                        player.slugcatStats.throwingSkill =
                             0;
                     }
                     else
                     {
-                        (abstractCreature.realizedCreature as Player).slugcatStats.throwingSkill =
+                        player.slugcatStats.throwingSkill =
                             1;
                     }
                 }
             }
 
-            if (
-                ModManager.Watcher
-                && (abstractCreature.realizedCreature as Player).SlugCatClass
+            if (ModManager.Watcher
+                && player.SlugCatClass
                     == Watcher.WatcherEnums.SlugcatStatsName.Watcher
             )
             {
-                if ((abstractCreature.realizedCreature as Player).rippleLevel >= 3f)
+                if (player.rippleLevel >= 3f)
                 {
-                    (abstractCreature.realizedCreature as Player).enterIntoCamoDuration = 80;
+                    player.enterIntoCamoDuration = 80;
                 }
                 else
                 {
-                    (abstractCreature.realizedCreature as Player).enterIntoCamoDuration = 40;
+                    player.enterIntoCamoDuration = 40;
                 }
             }
         }
@@ -1245,7 +1239,7 @@ namespace RainMeadow
                 .Select(player => ArenaHelpers.GetArenaClientSettings(player)) // Get settings
                 .Where(settings => settings != null) // Ensure settings exist
                 .Count(settings =>
-                    settings.playingAs == RainMeadow.Ext_SlugcatStatsName.OnlineOverseerSpectator
+                    settings!.playingAs == RainMeadow.Ext_SlugcatStatsName.OnlineOverseerSpectator
                 );
             if (
                 self.Players.Count + activePlayerCountWithOverseers
@@ -1572,6 +1566,47 @@ namespace RainMeadow
                 return a.deaths > b.deaths;
 
             return a.allKills.Count > b.allKills.Count;
+        }
+
+        public virtual List<AbstractCreature> GetActivePlayerACs(
+            ArenaOnlineGameMode arenaOnline,
+            ArenaGameSession arenaSession,
+            bool includeSandboxLosers = true)
+        {
+            List<AbstractCreature> activePlayers = [];
+
+            foreach (AbstractCreature playerAC in arenaSession.Players)
+            {
+                OnlinePlayer? onlinePlayer = playerAC.GetOnlineCreature()?.owner;
+                if (onlinePlayer is null)
+                    continue;
+
+                if (!playerAC.state.alive
+                    || arenaSession.exitManager?.IsPlayerInDen(playerAC) == true
+                    || ((Player?)playerAC.realizedCreature)?.dangerGrasp is not null)
+                {
+                    continue;
+                }
+
+                ArenaSitting.ArenaPlayer? arenaPlayer = ArenaHelpers.FindArenaPlayerByOnlinePlayer(
+                    arenaOnline,
+                    arenaSession.arenaSitting,
+                    onlinePlayer
+                );
+
+                if (arenaPlayer is not null)
+                {
+                    if ((playerAC.Room == arenaSession.game.world.offScreenDen && arenaPlayer.hasEnteredGameArea)
+                        || (!includeSandboxLosers && arenaPlayer.sandboxWin < 0))
+                    {
+                        continue;
+                    }
+                }
+
+                activePlayers.Add(playerAC);
+            }
+
+            return activePlayers;
         }
 
         /// <remarks>
