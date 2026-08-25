@@ -243,6 +243,7 @@ namespace RainMeadow
 
                     if (stuckInSpear.abstractCreature.GetOnlineCreature() is OnlineCreature onlineCrit)
                     {
+                        RainMeadow.Info($"creature: {onlineCrit}, killer: {onlineCrit.abstractCreature.realizedCreature.killTag}, owner: {onlineCrit.owner}");
                         OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreaturePinned, id, onlineCrit);
                         self.pinList.Add(stuckInSpear);
                     }
@@ -340,9 +341,16 @@ namespace RainMeadow
         {
             if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
             {
+                if (self.completed || self.game == null || crit == null) return;
+                if (crit.abstractCreature.GetOnlineCreature() is not OnlineCreature onlineCrit) return;
+                if (!onlineCrit.isMine) return;
+
+                RainMeadow.Info($"creature: {onlineCrit}, killer: {crit.abstractCreature.realizedCreature.killTag}, owner: {onlineCrit.owner}");
+
                 getChallengeID(self, out var id);
 
-                if (crit.abstractCreature.GetOnlineCreature() is OnlineCreature onlineCrit)
+                CreatureTemplate.Type type = crit.abstractCreature.creatureTemplate.type;
+                if (self.target == type || (self.target == CreatureTemplate.Type.DaddyLongLegs && type == CreatureTemplate.Type.BrotherLongLegs && (crit as DaddyLongLegs).colorClass))
                     OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, onlineCrit, playerNumber);
             }
             else
@@ -355,9 +363,16 @@ namespace RainMeadow
         {
             if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
             {
-                getChallengeID(self, out var id);
+                if (self.completed || self.game == null || crit == null) return;
+                if (crit.abstractCreature.GetOnlineCreature() is not OnlineCreature onlineCrit) return;
+                if (!onlineCrit.isMine) return;
 
-                if (crit.abstractCreature.GetOnlineCreature() is OnlineCreature onlineCrit)
+                RainMeadow.Info($"creature: {onlineCrit}, killer: {crit.abstractCreature.realizedCreature.killTag}, owner: {onlineCrit.owner}");
+
+                getChallengeID(self, out var id);
+                CreatureTemplate.Type type = crit.abstractCreature.creatureTemplate.type;
+                    
+                if (type != null && ChallengeTools.creatureSpawns[ExpeditionData.slugcatPlayer.value].Find((ChallengeTools.ExpeditionCreature f) => f.creature == type) is ChallengeTools.ExpeditionCreature globalExpeditionCrit)
                     OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, onlineCrit, playerNumber);
             }
             else
@@ -370,9 +385,16 @@ namespace RainMeadow
         {
             if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
             {
-                getChallengeID(self, out var id);
+                if (self.completed || self.game == null || crit == null) return;
+                if (crit.abstractCreature.GetOnlineCreature() is not OnlineCreature onlineCrit) return;
+                if (!onlineCrit.isMine) return;
 
-                if (crit.abstractCreature.GetOnlineCreature() is OnlineCreature onlineCrit)
+                RainMeadow.Info($"creature: {onlineCrit}, killer: {crit.abstractCreature.realizedCreature.killTag}, owner: {onlineCrit.owner}");
+
+                getChallengeID(self, out var id);
+                CreatureTemplate.Type type = crit.abstractCreature.creatureTemplate.type;
+
+                if (type != null && ChallengeTools.creatureSpawns[ExpeditionData.slugcatPlayer.value].Find((ChallengeTools.ExpeditionCreature f) => f.creature == type) is ChallengeTools.ExpeditionCreature globalExpeditionCrit)
                     OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreatureKilled, id, onlineCrit, playerNumber);
             }
             else

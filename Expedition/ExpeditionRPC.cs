@@ -10,7 +10,7 @@ namespace RainMeadow
             if (!(RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame)) return;
             if (!(ExpeditionData.challengeList[index] is PinChallenge)) throw new InvalidProgrammerException("not pin challenge");
 
-            crit.creature.Realize();
+            //crit.creature.Realize();
             var cl = (PinChallenge)ExpeditionData.challengeList[index];
             if (!cl.pinList.Contains(crit.realizedCreature))
             {
@@ -21,12 +21,56 @@ namespace RainMeadow
         }
 
         [RPCMethod]
-        public static void challengeCreatureKilled(int index, OnlineCreature crit, int pNum)
+        public static void challengeCreatureKilled(RPCEvent rpc, int index, OnlineCreature crit) // needs suport to custom mod challenges?
         {
             if (!(RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame)) return;
+            var challenge = ExpeditionData.challengeList[index];
+            if (challenge.completed || challenge.game == null || crit == null) return;
 
-            crit.creature.Realize();
-            ExpeditionData.challengeList[index].CreatureKilled(crit.realizedCreature, pNum);
+            CreatureTemplate.Type type = crit.abstractCreature.creatureTemplate.type;
+            switch (challenge)
+            {                
+                case HuntChallenge huntChallenge:
+                    huntChallenge.current++;
+                    RainMeadow.Info("HuntChallenge - Player " + (rpc.from).ToString() + " killed " + crit);
+                    huntChallenge.UpdateDescription();
+                    if (huntChallenge.current >= huntChallenge.amount)
+                    {
+                        huntChallenge.CompleteChallenge();
+                    }
+                    break;
+
+                case GlobalScoreChallenge globalScoreChallenge:
+                    if (type != null && ChallengeTools.creatureSpawns[ExpeditionData.slugcatPlayer.value].Find((ChallengeTools.ExpeditionCreature f) => f.creature == type) is ChallengeTools.ExpeditionCreature globalExpeditionCrit)
+                    {
+                        int points = globalExpeditionCrit.points;
+                        globalScoreChallenge.score += points;
+                        RainMeadow.Info($"GlobalScoreChallenge - Player {rpc.from} killed {type.value} | + {points.ToString()}");
+                    }
+                    globalScoreChallenge.UpdateDescription();
+                    if (globalScoreChallenge.score >= globalScoreChallenge.target)
+                    {
+                        globalScoreChallenge.score = globalScoreChallenge.target;
+                        globalScoreChallenge.CompleteChallenge();
+                    }
+                    break;
+
+                case CycleScoreChallenge cycleScoreChallenge:
+                    if (type != null && ChallengeTools.creatureSpawns[ExpeditionData.slugcatPlayer.value].Find((ChallengeTools.ExpeditionCreature f) => f.creature == type) is ChallengeTools.ExpeditionCreature cycleExpeditionCrit)
+                    {
+                        int points = cycleExpeditionCrit.points;
+                        cycleScoreChallenge.score += points;
+                        RainMeadow.Info($"CycleScoreChallenge - Player {rpc.from } killed {type.value} | + {points.ToString()}");
+                    }
+                    cycleScoreChallenge.UpdateDescription();
+                    if (cycleScoreChallenge.score >= cycleScoreChallenge.target)
+                    {
+                        cycleScoreChallenge.score = cycleScoreChallenge.target;
+                        cycleScoreChallenge.CompleteChallenge();
+                    }
+                
+                break;
+            }            
         }
 
         [RPCMethod]
