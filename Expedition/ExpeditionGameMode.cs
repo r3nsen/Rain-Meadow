@@ -10,7 +10,6 @@ namespace RainMeadow
 
         public List<OnlineCreature> challengeKills;
 
-        public ExpeditionLobbyData.ExpeditionDataState expeditionDataState;//ExpeditionData expeditionData;
         internal int challengeIndex; // hack - see ExpeditionHooks GetChallengeIndex
         public bool[] isChallengeCompleted;
         internal bool needUpdateChallenge;

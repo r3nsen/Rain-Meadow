@@ -177,7 +177,7 @@ namespace RainMeadow
 
         public void SetCampaign(SlugcatStats.Name campaign)
         {
-            if (expeditionGameMode.currentCampaign == campaign && expeditionGameMode.menuSaveGameData != null) return;
+            if (expeditionGameMode.currentCampaign == campaign && expeditionGameMode.menuSaveState != null) return;
             expeditionGameMode.currentCampaign = campaign;
 
             SaveGameData sgd = MineForSaveData(RWCustom.Custom.rainWorld.processManager, campaign);
