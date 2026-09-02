@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace RainMeadow
 {
-    public partial class ExpeditionOnlineMenu : ExpeditionMenu//, IChatSubscriber
+    public partial class ExpeditionOnlineMenu : ExpeditionMenu
     {
         public static ExpeditionGameMode expeditionGameMode;
         public static List<string> activeUnlocks;
@@ -43,7 +43,7 @@ namespace RainMeadow
             SetupOnlineMenuItens();
 
             ChatTextBox.OnShutDownRequest += ResetChatInput;
-            ChatLogManager.Subscribe(this);
+            ChatLogManager.MessageLogged += OnMessageLogged;
 
         }
 
@@ -194,7 +194,7 @@ namespace RainMeadow
             isChatToggled = false;
             ResetChatInput();
             ChatTextBox.OnShutDownRequest -= ResetChatInput;
-            ChatLogManager.Unsubscribe(this);
+            ChatLogManager.MessageLogged -= OnMessageLogged;
 
             RainMeadow.DebugMe();
             var up = manager.upcomingProcess;

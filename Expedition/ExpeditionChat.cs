@@ -7,7 +7,7 @@ using UnityEngine;
 namespace RainMeadow
 {
     // basically copied from story menu chat
-    public partial class ExpeditionOnlineMenu : ExpeditionMenu, IChatSubscriber
+    public partial class ExpeditionOnlineMenu : ExpeditionMenu
     {
         //Chat constants
         private const int maxVisibleMessages = 13;
@@ -22,8 +22,9 @@ namespace RainMeadow
         public NullLobbyError nullLobbyError;
         private ButtonScroller.TextAnchor textAnchor;
 
-        public void AddMessage(string user, string message)
+        public void OnMessageLogged(string user, string message)
         {
+            if (!Active) return;
             if (OnlineManager.lobby == null) return;
             if (ChatLogManager.ShouldMuteMessageFromUser(user)) return;
 
