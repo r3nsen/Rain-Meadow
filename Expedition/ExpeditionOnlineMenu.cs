@@ -3,6 +3,7 @@ using UnityEngine;
 using Expedition;
 using static Menu.SlugcatSelectMenu;
 using System.Collections.Generic;
+using RainMeadow.Generics;
 
 namespace RainMeadow
 {
@@ -10,6 +11,8 @@ namespace RainMeadow
     {
         public static ExpeditionGameMode expeditionGameMode;
         public static List<string> activeUnlocks;
+        public static List<string> challengeListStrings;
+        public static DynamicOrderedStates<ChallengeState> currentChallengeList;
 
         private CheckBox friendlyFire;
         private CheckBox reqCampaignSlug;
