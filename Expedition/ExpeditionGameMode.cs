@@ -77,6 +77,7 @@ namespace RainMeadow
             if (lobby.isOwner)
             {
                 needMenuSaveUpdate = true;
+                needSlugUpdate = true;
             }
         }
         public override void ConfigureAvatar(OnlineCreature onlineCreature)
