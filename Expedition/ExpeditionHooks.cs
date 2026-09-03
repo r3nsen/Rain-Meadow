@@ -32,8 +32,6 @@ namespace RainMeadow
             IL.Expedition.PinChallenge.Update += PinChallenge_Update;
             IL.RainWorldGame.Update += GetChallengeIndex;
 
-            //new Hook(typeof(RainMeadow.RainMeadow).GetMethod("Options_GetSaveFileName_SavOrExp", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance), Options_GetSaveFileName_SavOrExp);
-
             IL.ProcessManager.PreSwitchMainProcess += ProcessManager_PreSwitchMainProcess;
 
             On.Expedition.ExpeditionGame.SlowTimeTracker.Update += SlowTimeTracker_Update;
@@ -43,6 +41,30 @@ namespace RainMeadow
             IL.Expedition.ExpeditionCoreFile.ToString += ExpeditionCoreFile_ToString;
             On.Expedition.ExpeditionCoreFile.FromString += unlockAllMeadowMusics;            
             On.Expedition.ExpeditionProgression.GetUnlockedSongs += ExpeditionProgression_GetUnlockedSongs;
+            On.Expedition.PinChallenge.Reset += PinChallenge_Reset;
+            On.Expedition.PinChallenge.ctor += PinChallenge_ctor;
+        }
+
+        private void PinChallenge_ctor(On.Expedition.PinChallenge.orig_ctor orig, PinChallenge self)
+        {
+            orig(self);
+            if (isExpeditionMode(out var ex))
+            {
+                if (OnlineManager.lobby.isOwner)
+                {
+                    ex.pinChallenge_PinList = new List<OnlineCreature>();
+                }
+            }
+        }
+
+        private void PinChallenge_Reset(On.Expedition.PinChallenge.orig_Reset orig, PinChallenge self)
+        {
+            orig(self);
+            if (isExpeditionMode(out var ex))
+            {
+                ex.pinChallenge_PinList = new List<OnlineCreature>();
+            }
+
         }
 
         private void unlockAllMeadowMusics(On.Expedition.ExpeditionCoreFile.orig_FromString orig, ExpeditionCoreFile self, string saveString)
@@ -217,6 +239,9 @@ namespace RainMeadow
         {
             var c = new ILCursor(il);
             var skip = c.DefineLabel();
+            
+            // if (this.spearList[k].stuckInObject != null && this.spearList[k].stuckInObject is global::Creature && this.spearList[k].stuckInWall != null && !this.pinList.Contains(this.spearList[k].stuckInObject as global::Creature))
+            
             c.GotoNext(MoveType.After,
                 x => x.MatchLdarg(0),
                 x => x.MatchLdfld<Expedition.PinChallenge>(nameof(Expedition.PinChallenge.pinList)),
@@ -233,17 +258,24 @@ namespace RainMeadow
             c.Emit(OpCodes.Ldloc_2);
             c.EmitDelegate((PinChallenge self, int index) =>
             {
-                if (OnlineManager.lobby is null) return false;
-                if (OnlineManager.lobby.isOwner) return false;
-                if (isExpeditionMode(out var em))
+                if (isExpeditionMode(out var ex))
                 {
+                    r3n.Log("pinning");
                     getChallengeID(self, out var id);
 
                     var stuckInSpear = (Creature)self.spearList[index].stuckInObject;
 
                     if (stuckInSpear.abstractCreature.GetOnlineCreature() is OnlineCreature onlineCrit)
                     {
-                        RainMeadow.Info($"creature: {onlineCrit}, killer: {onlineCrit.abstractCreature.realizedCreature.killTag}, owner: {onlineCrit.owner}");
+                        RainMeadow.Debug($"creature: {onlineCrit}, killer: {onlineCrit.abstractCreature.realizedCreature.killTag}, owner: {onlineCrit.owner}");
+                        
+                        if (OnlineManager.lobby.isOwner)
+                        {
+                            r3n.Log("owner");
+                            ex.pinChallenge_PinList.Add(onlineCrit);
+                            return false;
+                        }
+                        r3n.Log("non owner");
                         OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreaturePinned, id, onlineCrit);
                         self.pinList.Add(stuckInSpear);
                     }

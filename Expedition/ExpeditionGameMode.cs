@@ -10,9 +10,11 @@ namespace RainMeadow
 
         public List<OnlineCreature> challengeKills;
 
-        internal int challengeIndex; // hack - see ExpeditionHooks GetChallengeIndex
+        public int challengeIndex; // hack - see ExpeditionHooks GetChallengeIndex
         public bool[] isChallengeCompleted;
-        internal bool needUpdateChallenge;
+        public bool needUpdateChallenge;
+
+        public List<OnlineCreature> pinChallenge_PinList;
 
         public ExpeditionGameMode(Lobby lobby) : base(lobby)
         {

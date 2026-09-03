@@ -12,11 +12,16 @@ namespace RainMeadow
 
             //crit.creature.Realize();
             var cl = (PinChallenge)ExpeditionData.challengeList[index];
-            if (!cl.pinList.Contains(crit.realizedCreature))
+            if (RainMeadow.isExpeditionMode(out var ex))
             {
-                cl.pinList.Add(crit.realizedCreature);
-                cl.current++;
-                cl.UpdateDescription();
+                r3n.Log("rpc expedition pining");
+                if (!ex.pinChallenge_PinList.Contains(crit))
+                {
+                    r3n.Log("updating");
+                    ex.pinChallenge_PinList.Add(crit);
+                    cl.current++;
+                    cl.UpdateDescription();
+                }
             }
         }
 
