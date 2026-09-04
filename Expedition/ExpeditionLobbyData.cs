@@ -3,6 +3,7 @@ using RainMeadow.Generics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 using static RainMeadow.OnlineResource;
 using static RainMeadow.StoryLobbyData;
@@ -69,8 +70,8 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
         [OnlineField(group = "expeditiondata")]
         bool[] isChallengeCompleted;
 
-        [OnlineField(group = "expeditiondata")]
-        DynamicOrderedStates<ChallengeState>? currentChallengeList;
+        [OnlineField(group = "expeditiondata", polymorphic = true)]
+        ChallengeState[] currentChallengeList;
 
         [OnlineField(group = "activeUnlocks", nullable = true)]
         public List<string> activeUnlocks = new List<string>();
@@ -113,9 +114,13 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
                     {
                         challengeStateList.Add(GetChallengeState(challenge));
                     }
-                    ExpeditionOnlineMenu.currentChallengeList = new DynamicOrderedStates<ChallengeState>(challengeStateList);
+                    ExpeditionOnlineMenu.currentChallengeList = challengeStateList.ToArray();
                 }
             }
+
+            RainMeadow.Debug("allChallengeLists"    + $"size: {ExpeditionData.allChallengeLists[currentCampaign].Count} - "               + string.Join(", ", ExpeditionData.allChallengeLists[currentCampaign].Select(n => $"{n} ")));
+            RainMeadow.Debug("currentChallengeList" + $"size: {ExpeditionOnlineMenu.currentChallengeList.Length} - " + string.Join(", ", ExpeditionOnlineMenu.currentChallengeList.Select(n => $"{n} ")));
+            RainMeadow.Debug("challengeListStrings" + $"size: {ExpeditionOnlineMenu.challengeListStrings.Count} - "      + string.Join(", ", ExpeditionOnlineMenu.challengeListStrings.Select(n => $"{n} ")));
 
             if (ExpeditionOnlineMenu.activeUnlocks is null || !ExpeditionGame.activeUnlocks.SequenceEqual(ExpeditionOnlineMenu.activeUnlocks))
             {
@@ -143,7 +148,7 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
 
             if (ExpeditionOnlineMenu.expeditionGameMode is not null)
             {
-                int cclCount = currentChallengeList.list.Count;
+                int cclCount = currentChallengeList.Length;
 
                 if (ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted == null || ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted.Length != cclCount)
                 {
@@ -154,7 +159,7 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
 
                 for (int i = 0; i < cclCount; i++)
                 {
-                    isChallengeCompleted[i] = ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted[i] = currentChallengeList.list[i].completed;
+                    isChallengeCompleted[i] = ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted[i] = currentChallengeList[i].completed;
                 }
             }
         }
@@ -211,10 +216,10 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
 
             if (!ExpeditionGame.expeditionComplete)
             {
-                if (!ExpeditionData.allChallengeLists.ContainsKey(currentCampaign) || ExpeditionData.allChallengeLists[currentCampaign].Count != currentChallengeList.list.Count)
+                if (!ExpeditionData.allChallengeLists.ContainsKey(currentCampaign) || ExpeditionData.allChallengeLists[currentCampaign].Count != currentChallengeList.Length)
                 {
                     List<Challenge> challengeList = new List<Challenge>();
-                    foreach (ChallengeState challengeState in currentChallengeList.list)
+                    foreach (ChallengeState challengeState in currentChallengeList)
                     {
                         var _challenge = challengeState.GetChallenge;                            
                         challengeList.Add(_challenge);
@@ -224,28 +229,48 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
 
                 List<Challenge> challenge = ExpeditionData.allChallengeLists[currentCampaign];
 
-                if (ExpeditionOnlineMenu.challengeListStrings is null || ExpeditionOnlineMenu.challengeListStrings.Count != challenge.Count)
+                RainMeadow.Debug("currentChallengeList" + $"size: {currentChallengeList.Length} - " + string.Join(", ", currentChallengeList.Select(n => $"{n} ")));
+                for (int i = 0; i < ExpeditionData.allChallengeLists[currentCampaign].Count; i++)
                 {
-                    string[] challengeStrings = new string[challenge.Count];
-                    for (int i = 0; i < challenge.Count; i++) 
+                    RainMeadow.Debug($" - [{i}]");
+                    var cc = ExpeditionData.allChallengeLists[currentCampaign][i];
+                    Type t = cc.GetType();
+                    FieldInfo[] fields = t.GetFields();
+
+                    foreach (var field in fields)
                     {
-                        challengeStrings[i] = challenge[i].ToString();
+                        var value = field.GetValue(cc);
+                        RainMeadow.Debug($" - [{t}]");
+                        RainMeadow.Debug($" - field: {field}");
+                        RainMeadow.Debug($" - value: {value}");
                     }
+                    // RainMeadow.Debug($" - {ExpeditionData.allChallengeLists[currentCampaign][i].GetType()} ");
+                    // RainMeadow.Debug($" -- { ExpeditionData.allChallengeLists[currentCampaign][i]} ");
+                }
+                // RainMeadow.Debug("currentChallengeList" + $"size: {ExpeditionData.allChallengeLists[currentCampaign].Count} - " + string.Join(", ", ExpeditionData.allChallengeLists[currentCampaign].Select(n => $"{n} ")));
+
+                if (ExpeditionOnlineMenu.challengeListStrings is null || ExpeditionOnlineMenu.challengeListStrings.Count != currentChallengeList.Length)//challenge.Count)
+                {
+                    string[] challengeStrings = new string[currentChallengeList.Length];
+                    //for (int i = 0; i < challenge.Count; i++) 
+                    //{
+                    //    challengeStrings[i] = challenge[i].ToString();
+                    //}
                     ExpeditionOnlineMenu.challengeListStrings = new List<string>(challengeStrings);
                 }
 
-                for (int i = 0; i < currentChallengeList.list.Count; i++)
+                for (int i = 0; i < currentChallengeList.Length; i++)
                 {
 
-                    if (challenge[i].GetType() != currentChallengeList.list[i].ChallengeType)
+                    if (challenge[i].GetType() != currentChallengeList[i].ChallengeType)
                     {
-                        challenge[i] = currentChallengeList.list[i].GetChallenge;
+                        challenge[i] = currentChallengeList[i].GetChallenge;
                     }
 
                     bool oldCompleteState = challenge[i].completed;
                     bool needUpdate = false;
 
-                    currentChallengeList.list[i].ReadTo(challenge[i]);
+                    currentChallengeList[i].ReadTo(challenge[i]);
 
                     if (ExpeditionOnlineMenu.challengeListStrings[i] != challenge[i].ToString())
                     {

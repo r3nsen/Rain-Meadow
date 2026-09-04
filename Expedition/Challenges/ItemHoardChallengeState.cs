@@ -28,4 +28,8 @@ public class ItemHoardChallengeState : ChallengeState
         ihc.amount = amount;
         ihc.target = (AbstractPhysicalObject.AbstractObjectType)ExtEnumBase.Parse(typeof(AbstractPhysicalObject.AbstractObjectType), target, false);
     }
+    public override string ToString()
+    {
+        return $"{{{base.ToString()}: data - amount: {amount}, target: {target}}}";
+    }
 }

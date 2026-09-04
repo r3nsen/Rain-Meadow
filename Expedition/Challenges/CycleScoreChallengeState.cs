@@ -4,7 +4,7 @@ using System;
 namespace RainMeadow;
 
 public class CycleScoreChallengeState : ChallengeState
-{    
+{
     [OnlineField]
     int score;
     [OnlineField]
@@ -27,5 +27,9 @@ public class CycleScoreChallengeState : ChallengeState
         CycleScoreChallenge csc = (CycleScoreChallenge)challenge;
         csc.score = score;
         csc.target = target;
+    }
+    public override string ToString()
+    {
+        return $"{{{base.ToString()}: data - score: { score}, target: { target} }}";
     }
 }

@@ -25,4 +25,9 @@ public class AchievementChallengeState : ChallengeState
         achievementChallenge.ID = (WinState.EndgameID)ExtEnumBase.Parse(typeof(WinState.EndgameID), ID, false);
 
     }
+
+    public override string ToString()
+    {
+        return $"{{{base.ToString()}:  data - ID: {ID}}}";
+    }
 }

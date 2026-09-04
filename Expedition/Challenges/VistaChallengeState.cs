@@ -33,4 +33,8 @@ public class VistaChallengeState : ChallengeState
         vc.region = region;
         vc.room = room;
     }
+    public override string ToString()
+    {
+        return $"{{{base.ToString()}: data - location: {location}, region: {region}, room: {room}}}";
+    }
 }

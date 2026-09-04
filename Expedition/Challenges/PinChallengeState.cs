@@ -28,4 +28,8 @@ public class PinChallengeState : ChallengeState
         pc.current = current;
         pc.target = target;
     }
+    public override string ToString()
+    {
+        return $"{{{base.ToString()}: data - current: {current}, target: {target}}}";
+    }
 }

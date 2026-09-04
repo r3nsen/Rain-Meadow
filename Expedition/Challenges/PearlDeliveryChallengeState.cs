@@ -28,4 +28,8 @@ public class PearlDeliveryChallengeState : ChallengeState
         pdc.iterator = iterator;
         pdc.region = region;
     }
+    public override string ToString()
+    {
+        return $"{{{base.ToString()}: data - iterador: {iterator}, region: {region}}}";
+    }
 }

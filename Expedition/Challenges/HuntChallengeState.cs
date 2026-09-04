@@ -32,4 +32,8 @@ public class HuntChallengeState : ChallengeState
         hc.current = current;
         hc.target = (CreatureTemplate.Type)ExtEnumBase.Parse(typeof(CreatureTemplate.Type), target, false);
     }
+    public override string ToString()
+    {
+        return $"{{{base.ToString()}: data - amount: {amount}, current: {current}, target: {target}}}";
+    }
 }

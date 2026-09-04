@@ -43,6 +43,17 @@ namespace RainMeadow
             On.Expedition.ExpeditionProgression.GetUnlockedSongs += ExpeditionProgression_GetUnlockedSongs;
             On.Expedition.PinChallenge.Reset += PinChallenge_Reset;
             On.Expedition.PinChallenge.ctor += PinChallenge_ctor;
+            // On.Player.Update += logview;
+        }
+
+        private void logview(On.Player.orig_Update orig, Player self, bool eu)
+        {
+            orig(self, eu);
+            if (isStoryMode(out var ex))
+            {
+                // canJoinGame => isInGame && !changedRegions && readyForTransition == ReadyForTransition.Closed && !readyForWin;
+                r3n.viewLog($"canJoinGame: {ex.canJoinGame}, isInGame: {ex.isInGame}, !changedRegions: {!ex.changedRegions}, readyForTransition: {ex.readyForTransition}, !readyForWin: {!ex.readyForWin} ", self.room);
+            }
         }
 
         private void PinChallenge_ctor(On.Expedition.PinChallenge.orig_ctor orig, PinChallenge self)
@@ -260,7 +271,6 @@ namespace RainMeadow
             {
                 if (isExpeditionMode(out var ex))
                 {
-                    r3n.Log("pinning");
                     getChallengeID(self, out var id);
 
                     var stuckInSpear = (Creature)self.spearList[index].stuckInObject;
@@ -270,12 +280,10 @@ namespace RainMeadow
                         RainMeadow.Debug($"creature: {onlineCrit}, killer: {onlineCrit.abstractCreature.realizedCreature.killTag}, owner: {onlineCrit.owner}");
                         
                         if (OnlineManager.lobby.isOwner)
-                        {
-                            r3n.Log("owner");
+                        {                         
                             ex.pinChallenge_PinList.Add(onlineCrit);
                             return false;
                         }
-                        r3n.Log("non owner");
                         OnlineManager.lobby.owner.InvokeRPC(ExpeditionRPC.challengeCreaturePinned, id, onlineCrit);
                         self.pinList.Add(stuckInSpear);
                     }

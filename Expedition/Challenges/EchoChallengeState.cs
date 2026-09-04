@@ -24,4 +24,8 @@ public class EchoChallengeState : ChallengeState
         EchoChallenge ec = (EchoChallenge)challenge;
         ec.ghost = (GhostWorldPresence.GhostID)ExtEnumBase.Parse(typeof(GhostWorldPresence.GhostID), ghost, false);
     }
+    public override string ToString()
+    {
+        return $"{{{base.ToString()}: data - ghost: {ghost}}}";
+    }
 }

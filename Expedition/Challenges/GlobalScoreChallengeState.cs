@@ -30,6 +30,6 @@ public class GlobalScoreChallengeState : ChallengeState
     
     public override string ToString()
     {
-        return base.ToString() + $"{{score: {score} - target: {target}}}";
+        return $"{{{base.ToString()}: score: {score}, target: {target}}}";
     }
 }

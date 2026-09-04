@@ -12,7 +12,7 @@ namespace RainMeadow
         public static ExpeditionGameMode expeditionGameMode;
         public static List<string> activeUnlocks;
         public static List<string> challengeListStrings;
-        public static DynamicOrderedStates<ChallengeState> currentChallengeList;
+        public static ChallengeState[] currentChallengeList;
 
         private CheckBox friendlyFire;
         private CheckBox reqCampaignSlug;

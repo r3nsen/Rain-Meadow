@@ -28,4 +28,8 @@ public class NeuronDeliveryChallengeState : ChallengeState
         ndc.delivered = delivered;
         ndc.neurons = neurons;
     }
+    public override string ToString()
+    {
+        return $"{{{base.ToString()}: data - delivered: {delivered}, neurons: {neurons}}}";
+    }
 }

@@ -32,4 +32,8 @@ public class PearlHoardChallengeState : ChallengeState
         phc.common = common;
         phc.region = region;
     }
+    public override string ToString()
+    {
+        return $"{{{base.ToString()}: data - common: {common}, region: {region}}}";
+    }
 }
