@@ -130,7 +130,8 @@ namespace RainMeadow
                 {
                     for (int i = 0; i < characterSelect.slugcatButtons.Length; i++)
                     {
-                        characterSelect.slugcatButtons[i].buttonBehav.greyedOut = false;
+                        bool greyout = !ExpeditionGame.unlockedExpeditionSlugcats.Contains(ExpeditionGame.playableCharacters[i]);
+                        characterSelect.slugcatButtons[i].buttonBehav.greyedOut = greyout;
                     }
                 }
             }
