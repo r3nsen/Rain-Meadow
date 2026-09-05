@@ -471,37 +471,17 @@ namespace RainMeadow
 
         private void CharacterSelectPage_LoadGame(On.Menu.CharacterSelectPage.orig_LoadGame orig, CharacterSelectPage self)
         {
-            pre_start();
+            ExpeditionOnlineMenu.pre_start();
             orig(self);
         }
 
         private void ChallengeSelectPage_StartGame(On.Menu.ChallengeSelectPage.orig_StartGame orig, ChallengeSelectPage self)
         {
-            pre_start();
+            ExpeditionOnlineMenu.pre_start();            
             orig(self);
         }
 
-        void pre_start()
-        {
-            if (OnlineManager.lobby != null)
-            {
-                if (OnlineManager.lobby.isOwner)
-                {
-                    ExpeditionOnlineMenu.expeditionGameMode.currentCampaign = Expedition.ExpeditionData.slugcatPlayer;
-                }
-
-                var expeditionGameMode = ExpeditionOnlineMenu.expeditionGameMode;
-                for (int i = 0; i < expeditionGameMode.avatarSettings.Length; i++)
-                {
-                    expeditionGameMode.avatarSettings[i].playingAs = expeditionGameMode.currentCampaign;
-                }
-
-                for (int i = 0; i < expeditionGameMode.avatarSettings.Length; i++)
-                {
-                    expeditionGameMode.avatarSettings[i].currentColors = [.. PlayerGraphics.DefaultBodyPartColorHex(expeditionGameMode.avatarSettings[i].playingAs).Select(RWCustom.Custom.hexToColor)];
-                }
-            }
-        }
+        
 
         private bool PlayerProgression_IsThereASavedGame(On.PlayerProgression.orig_IsThereASavedGame orig, PlayerProgression self, SlugcatStats.Name saveStateNumber)
         {

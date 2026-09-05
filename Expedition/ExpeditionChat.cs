@@ -17,8 +17,7 @@ namespace RainMeadow
         private List<(string, string)> chatLog = [];
         private int currentLogIndex = 0;
         private bool isChatToggled = false;
-        private ChatTextBox chatTextBox;
-        private Vector2 chatTextBoxPos;
+        
         public NullLobbyError nullLobbyError;
         private ButtonScroller.TextAnchor textAnchor;
 
@@ -49,11 +48,11 @@ namespace RainMeadow
         internal void ResetChatInput()
         {
             this.chatTextBox?.DelayedUnload(0.1f);
-            pages[0].ClearMenuObject(ref this.chatTextBox);
+            pages[_currentPage].ClearMenuObject(ref this.chatTextBox);
             if (this.isChatToggled && this.chatTextBox is null)
             {
-                this.chatTextBox = new ChatTextBox(this, pages[0], "", new Vector2(this.chatTextBoxPos.x + 24, 0), new(575, 30));
-                pages[0].subObjects.Add(this.chatTextBox);
+                this.chatTextBox = new ChatTextBox(this, pages[_currentPage], "", new Vector2(this.chatTextBoxPos.x + 24, 0), new(575, 30));
+                pages[_currentPage].subObjects.Add(this.chatTextBox);
             }
         }
 

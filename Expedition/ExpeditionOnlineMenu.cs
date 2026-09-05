@@ -4,6 +4,8 @@ using Expedition;
 using static Menu.SlugcatSelectMenu;
 using System.Collections.Generic;
 using RainMeadow.Generics;
+using Steamworks;
+using System.Linq;
 
 namespace RainMeadow
 {
@@ -29,6 +31,9 @@ namespace RainMeadow
                 expeditionGameMode.currentCampaign = ExpeditionData.slugcatPlayer;
                 expeditionGameMode.saveToDisk = true;
                 expeditionGameMode.slugcatSelected = currentSelection;
+
+                if (MatchmakingManager.currentInstance is SteamMatchmakingManager steamMatchmakingManager)
+                    SteamMatchmaking.SetLobbyData(steamMatchmakingManager.lobbyID, MatchmakingManager.CAMPAIGN_KEY, "");
             }
             else
             {
@@ -36,14 +41,19 @@ namespace RainMeadow
                 expeditionGameMode.needSlugUpdate = true;
             }
 
-            // implement MatchmakingManager.OnPlayerListReceived += OnlineManager_OnPlayerListReceived;
-
             RMOverlayHUD.GetOverlay()?.DestroyChatHUD();
             textAnchor = RainMeadow.rainMeadowOptions.ChatTextDownscroll.Value
                 ? ButtonScroller.TextAnchor.Bottom
                 : ButtonScroller.TextAnchor.Top;
 
             SetupOnlineMenuItens();
+
+            // player list
+            
+            UpdatePlayerList();
+            MatchmakingManager.OnPlayerListReceived += OnlineManager_OnPlayerListReceived;
+            
+            // ---
 
             ChatTextBox.OnShutDownRequest += ResetChatInput;
             ChatLogManager.MessageLogged += OnMessageLogged;
@@ -64,8 +74,8 @@ namespace RainMeadow
                 float y = manager.rainWorld.options.ScreenSize.y;
                 float w = 480;
                 float h = 320;
-                nullLobbyError = new NullLobbyError(this, pages[0], new Vector2((x - w) / 2, (y - h) / 2), new Vector2(w, h), Utils.Translate("Story lobby is null! Exiting..."), false);
-                pages[0].subObjects.Add(nullLobbyError);
+                nullLobbyError = new NullLobbyError(this, pages[_currentPage], new Vector2((x - w) / 2, (y - h) / 2), new Vector2(w, h), Utils.Translate("Story lobby is null! Exiting..."), false);
+                pages[_currentPage].subObjects.Add(nullLobbyError);
                 return;
             }
 
@@ -82,6 +92,8 @@ namespace RainMeadow
             }
 
             base.Update();
+
+            UpdateUI();
 
             if (OnlineManager.lobby == null) return;
 
@@ -156,6 +168,30 @@ namespace RainMeadow
             }
         }
 
+        public static void pre_start()
+        {
+            if (OnlineManager.lobby != null)
+            {
+                if (OnlineManager.lobby.isOwner)
+                {
+                    ExpeditionOnlineMenu.expeditionGameMode.currentCampaign = Expedition.ExpeditionData.slugcatPlayer;
+                }
+
+                var expeditionGameMode = ExpeditionOnlineMenu.expeditionGameMode;
+                for (int i = 0; i < expeditionGameMode.avatarSettings.Length; i++)
+                {
+                    expeditionGameMode.avatarSettings[i].playingAs = expeditionGameMode.currentCampaign;
+                }
+
+                for (int i = 0; i < expeditionGameMode.avatarSettings.Length; i++)
+                {
+                    expeditionGameMode.avatarSettings[i].currentColors = [.. PlayerGraphics.DefaultBodyPartColorHex(expeditionGameMode.avatarSettings[i].playingAs).Select(RWCustom.Custom.hexToColor)];
+                }
+            }
+            if (MatchmakingManager.currentInstance is SteamMatchmakingManager steamMatchmakingManager)
+                SteamMatchmaking.SetLobbyData(steamMatchmakingManager.lobbyID, MatchmakingManager.CAMPAIGN_KEY, expeditionGameMode.currentCampaign.value);
+        }
+
         public static Menu.SlugcatSelectMenu.SaveGameData getSaveState()
         {
             return expeditionGameMode.menuSaveGameData;
@@ -201,7 +237,28 @@ namespace RainMeadow
                 manager.RequestMainProcessSwitch(RainMeadow.Ext_ProcessID.LobbySelectMenu);
                 return;
             }
+            
             base.Singal(sender, message);
+
+            if (message == "LEFT")
+            {
+                if(currentPage == 3)
+                    UpdateOnlinePage(2);
+                else if(currentPage == 2)
+                    UpdateOnlinePage(1);
+            }
+            if (message == "RIGHT")
+            {
+                if (currentPage == 2)
+                    UpdateOnlinePage(3);
+            }
+            if (message == "NEW")
+            {
+                if (currentPage == 1)
+                    UpdateOnlinePage(2);            
+            }
+
+            
         }
     }
 }
