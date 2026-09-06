@@ -53,6 +53,8 @@ namespace RainMeadow
         private Vector2 chatTextBoxPos;
 
         CheckBox customColorsCheckbox;
+        CheckBox isPupCheckbox;
+        
 
         bool _pagesMoving;
 
@@ -82,6 +84,7 @@ namespace RainMeadow
             pages[_currentPage].subObjects.Add(toggleChat);
 
             SetupColorMenu();
+            SetupCheckbox();
         }
 
         // update()
@@ -158,10 +161,15 @@ namespace RainMeadow
                 float restartTextWidth = GetRestartTextWidth(base.CurrLang);
                 //float restartTextOffset = GetRestartTextOffset(base.CurrLang);
 
-                Vector2 pos = new(70 + restartTextWidth, 553 + 60);
+                Vector2 pos = new(70 + restartTextWidth, 550 + 70);
 
                 customColorsCheckbox.pos = pos - pagePos;
                 customColorsCheckbox.lastPos = pos - pageLastPos;
+
+                pos = new(70 + restartTextWidth, 520 + 70);
+
+                isPupCheckbox.pos = pos - pagePos;
+                isPupCheckbox.lastPos = pos - pageLastPos;
 
                 // why...
                 if (colorInterface != null)
@@ -194,6 +202,8 @@ namespace RainMeadow
             pages[currentPage].ClearMenuObject(ref chatTextBox);
 
             pages[currentPage].ClearMenuObject(ref customColorsCheckbox);
+            pages[currentPage].ClearMenuObject(ref isPupCheckbox);
+            
 
             RemoveColorInterface();
             RemoveSlugcatList();
@@ -287,6 +297,8 @@ namespace RainMeadow
                         AddColorButtons();
                     }
                 }
+                
+                SetChecked(customColorsCheckbox, manager.rainWorld.progression.miscProgressionData.colorsEnabled.ContainsKey(PlayerSelectedSlugcat.value) && manager.rainWorld.progression.miscProgressionData.colorsEnabled[PlayerSelectedSlugcat.value]);
             }
         }
 
@@ -336,6 +348,7 @@ namespace RainMeadow
         public SimpleButton defaultColorButton;
 
         public int activeColorChooser;
+        private bool slugpupChecked;
 
         public void SetupColorMenu()
         {
@@ -344,13 +357,27 @@ namespace RainMeadow
                 float restartTextWidth = GetRestartTextWidth(base.CurrLang);
                 float restartTextOffset = GetRestartTextOffset(base.CurrLang);
 
-                Vector2 pos = new(70, 553);
+                Vector2 pos = new(70, 550);
 
-                customColorsCheckbox = new CheckBox(this, pages[_currentPage], this, pos + new Vector2(restartTextWidth, 60), restartTextWidth, Translate("Custom colors"), "COLORS");
+                customColorsCheckbox = new CheckBox(this, pages[_currentPage], this, pos + new Vector2(restartTextWidth, 70), restartTextWidth, Translate("Custom colors"), "COLORS");
                 customColorsCheckbox.label.pos.x += restartTextWidth - customColorsCheckbox.label.label.textRect.width - 5f;
                 customColorsCheckbox.selectable = true;
                 pages[_currentPage].subObjects.Add(customColorsCheckbox);
             }
+        }
+
+        public void SetupCheckbox()
+        {
+            
+            float restartTextWidth = GetRestartTextWidth(base.CurrLang);
+            float restartTextOffset = GetRestartTextOffset(base.CurrLang);
+
+            Vector2 pos = new(70, 520);
+
+            isPupCheckbox = new CheckBox(this, pages[_currentPage], this, pos + new Vector2(restartTextWidth, 70), restartTextWidth, Translate("Slugpup"), "SLUGPUP");
+            isPupCheckbox.label.pos.x += restartTextWidth - isPupCheckbox.label.label.textRect.width - 5f;
+            isPupCheckbox.selectable = true;
+            pages[_currentPage].subObjects.Add(isPupCheckbox);
         }
 
         public void AddColorButtons()
@@ -359,6 +386,7 @@ namespace RainMeadow
             {
                 float w = ButtonScroller.CalculateHeightBasedOnAmtOfButtons(MaxVisibleOnList + 2, ButtonSize, ButtonSpacingOffset);
                 Vector2 vector = new(70, 553 - w - 15);
+                RainMeadow.Debug($"PlayerSelectedSlugcat: {PlayerSelectedSlugcat}");
                 colorInterface = GetColorInterfaceForSlugcat(pos: vector, slugcatID: PlayerSelectedSlugcat);
                 pages[_currentPage].subObjects.Add(colorInterface);
 
@@ -499,6 +527,10 @@ namespace RainMeadow
             {
                 return colorChecked;
             }
+            if (box.IDString == "SLUGPUP")
+            {
+                return slugpupChecked;
+            }
             else
             {
                 RainMeadow.Debug($"GetChecked {box.IDString} not implemented");
@@ -515,11 +547,27 @@ namespace RainMeadow
                 {
                     AddColorButtons();
                     manager.rainWorld.progression.miscProgressionData.colorsEnabled[PlayerSelectedSlugcat.value] = true;
+                    ExpeditionOnlineCoreFIle.customColors = true;
                 }
                 else
                 {
                     RemoveColorButtons();
                     manager.rainWorld.progression.miscProgressionData.colorsEnabled[PlayerSelectedSlugcat.value] = false;
+                    ExpeditionOnlineCoreFIle.customColors = false;
+                }
+            }
+            if (box.IDString == "SLUGPUP")
+            {
+                slugpupChecked = c;
+                if (slugpupChecked)// && !CheckJollyCoopAvailable(colorFromIndex(slugcatPageIndex)))
+                {
+                    expeditionGameMode.avatarSettings[0].fakePup = true;
+                    ExpeditionOnlineCoreFIle.isPup = true;
+                }
+                else
+                {
+                    expeditionGameMode.avatarSettings[0].fakePup = false;
+                    ExpeditionOnlineCoreFIle.isPup = false;
                 }
             }
         }

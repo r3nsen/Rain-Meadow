@@ -22,7 +22,7 @@ namespace RainMeadow
         private MenuLabel? lobbyLabel, slugcatLabel;
 
         private bool jollyStarted;
-
+        private bool colorsChecked;
         public ExpeditionOnlineMenu(ProcessManager manager) : base(manager)
         {
             playerSelectedSlugcats = new SlugcatStats.Name[4];
@@ -59,12 +59,10 @@ namespace RainMeadow
             UpdatePlayerList();
             MatchmakingManager.OnPlayerListReceived += OnlineManager_OnPlayerListReceived;
 
-            // ---
-
             ChatTextBox.OnShutDownRequest += ResetChatInput;
             ChatLogManager.MessageLogged += OnMessageLogged;
 
-
+            SetChecked(isPupCheckbox, ExpeditionOnlineCoreFIle.isPup);
         }
 
         public override void Update()
@@ -193,9 +191,14 @@ namespace RainMeadow
             }
 
             SetupSlugcatList();
-            if (slugcatSelector != null)
+
+            slugcatSelector.Slug = PlayerSelectedSlugcat;
+
+            if (!colorsChecked && !manager.rainWorld.progression.loadInProgress)
             {
-                slugcatSelector.Slug = PlayerSelectedSlugcat;
+                colorsChecked = true;
+                SetSelectedSlugcat(0, PlayerSelectedSlugcat);
+                SetChecked(customColorsCheckbox, manager.rainWorld.progression.miscProgressionData.colorsEnabled.ContainsKey(PlayerSelectedSlugcat.value) && manager.rainWorld.progression.miscProgressionData.colorsEnabled[PlayerSelectedSlugcat.value]);
             }
         }
 
@@ -234,7 +237,6 @@ namespace RainMeadow
                                 manager.rainWorld.options.jollyPlayerOptionsArray[i].GetFaceColor(),
                                 manager.rainWorld.options.jollyPlayerOptionsArray[i].GetUniqueColor()
                             };
-
                         }
                         else if (manager.rainWorld.options.jollyColorMode == Options.JollyColorMode.AUTO)
                         {
@@ -245,11 +247,11 @@ namespace RainMeadow
                             else
                             {
                                 expeditionGameMode.avatarSettings[i].currentColors = new List<Color>
-                            {
-                                PlayerGraphics.JollyColor(i, 0),
-                                PlayerGraphics.JollyColor(i, 1),
-                                PlayerGraphics.JollyColor(i, 2)
-                            };
+                                {
+                                    PlayerGraphics.JollyColor(i, 0),
+                                    PlayerGraphics.JollyColor(i, 1),
+                                    PlayerGraphics.JollyColor(i, 2)
+                                };
                             }
                         }
                         else
@@ -261,9 +263,9 @@ namespace RainMeadow
                     else
                     {
                         // TODO: seperate custom colors for each avatar
-                        RainMeadow.Debug($"currentColors: {expeditionGameMode.avatarSettings[i].currentColors} = expeditionGameMode.avatarSettings[{i}].playingAs: {expeditionGameMode.avatarSettings[i].playingAs}");
+                        //RainMeadow.Debug($"currentColors: {expeditionGameMode.avatarSettings[i].currentColors} = expeditionGameMode.avatarSettings[{i}].playingAs: {expeditionGameMode.avatarSettings[i].playingAs}");
                         expeditionGameMode.avatarSettings[i].currentColors = manager.rainWorld.progression.GetCustomColors(expeditionGameMode.avatarSettings[i].playingAs); //abt colors, color config updates to campaign when required campaign is on. Client side, the host still needs to be in the menu to update it so they will notice the color config update
-                        expeditionGameMode.avatarSettings[i].fakePup = true;
+                        // expeditionGameMode.avatarSettings[i].fakePup = true;
                     }
                 }
             }
@@ -287,7 +289,6 @@ namespace RainMeadow
                 expeditionGameMode.menuSaveState = new StoryLobbyData.MenuSaveStateState(sgd);
             else
                 expeditionGameMode.menuSaveState = null;
-
         }
 
         public override void ShutDownProcess()
@@ -311,7 +312,7 @@ namespace RainMeadow
             if (message == "EXIT")
             {
                 PlaySound(SoundID.MENU_Switch_Page_Out);
-                global::Expedition.Expedition.coreFile.Save(runEnded: false);
+                Expedition.Expedition.coreFile.Save(runEnded: false);
                 manager.musicPlayer?.FadeOutAllSongs(100f);
                 manager.RequestMainProcessSwitch(RainMeadow.Ext_ProcessID.LobbySelectMenu);
                 return;
@@ -366,8 +367,6 @@ namespace RainMeadow
                 if (currentPage == 1)
                     UpdateOnlinePage(2);
             }
-
-
         }
     }
 }

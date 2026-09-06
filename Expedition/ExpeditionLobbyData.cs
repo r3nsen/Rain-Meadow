@@ -118,10 +118,6 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
                 }
             }
 
-            RainMeadow.Debug("allChallengeLists"    + $"size: {ExpeditionData.allChallengeLists[currentCampaign].Count} - "               + string.Join(", ", ExpeditionData.allChallengeLists[currentCampaign].Select(n => $"{n} ")));
-            RainMeadow.Debug("currentChallengeList" + $"size: {ExpeditionOnlineMenu.currentChallengeList.Length} - " + string.Join(", ", ExpeditionOnlineMenu.currentChallengeList.Select(n => $"{n} ")));
-            RainMeadow.Debug("challengeListStrings" + $"size: {ExpeditionOnlineMenu.challengeListStrings.Count} - "      + string.Join(", ", ExpeditionOnlineMenu.challengeListStrings.Select(n => $"{n} ")));
-
             if (ExpeditionOnlineMenu.activeUnlocks is null || !ExpeditionGame.activeUnlocks.SequenceEqual(ExpeditionOnlineMenu.activeUnlocks))
             {
                 ExpeditionOnlineMenu.activeUnlocks = new List<string>(ExpeditionGame.activeUnlocks);
@@ -228,27 +224,7 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
                 }
 
                 List<Challenge> challenge = ExpeditionData.allChallengeLists[currentCampaign];
-
-                RainMeadow.Debug("currentChallengeList" + $"size: {currentChallengeList.Length} - " + string.Join(", ", currentChallengeList.Select(n => $"{n} ")));
-                for (int i = 0; i < ExpeditionData.allChallengeLists[currentCampaign].Count; i++)
-                {
-                    RainMeadow.Debug($" - [{i}]");
-                    var cc = ExpeditionData.allChallengeLists[currentCampaign][i];
-                    Type t = cc.GetType();
-                    FieldInfo[] fields = t.GetFields();
-
-                    foreach (var field in fields)
-                    {
-                        var value = field.GetValue(cc);
-                        RainMeadow.Debug($" - [{t}]");
-                        RainMeadow.Debug($" - field: {field}");
-                        RainMeadow.Debug($" - value: {value}");
-                    }
-                    // RainMeadow.Debug($" - {ExpeditionData.allChallengeLists[currentCampaign][i].GetType()} ");
-                    // RainMeadow.Debug($" -- { ExpeditionData.allChallengeLists[currentCampaign][i]} ");
-                }
-                // RainMeadow.Debug("currentChallengeList" + $"size: {ExpeditionData.allChallengeLists[currentCampaign].Count} - " + string.Join(", ", ExpeditionData.allChallengeLists[currentCampaign].Select(n => $"{n} ")));
-
+  
                 if (ExpeditionOnlineMenu.challengeListStrings is null || ExpeditionOnlineMenu.challengeListStrings.Count != currentChallengeList.Length)//challenge.Count)
                 {
                     string[] challengeStrings = new string[currentChallengeList.Length];

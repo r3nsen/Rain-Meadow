@@ -6,6 +6,7 @@ using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using Menu;
 using Expedition;
+using System.Text.RegularExpressions;
 
 namespace RainMeadow
 {
@@ -42,7 +43,87 @@ namespace RainMeadow
             On.Expedition.ExpeditionCoreFile.FromString += unlockAllMeadowMusics;            
             On.Expedition.ExpeditionProgression.GetUnlockedSongs += ExpeditionProgression_GetUnlockedSongs;
             On.Expedition.PinChallenge.Reset += PinChallenge_Reset;
-            On.Expedition.PinChallenge.ctor += PinChallenge_ctor;         
+            On.Expedition.PinChallenge.ctor += PinChallenge_ctor;
+
+            On.Expedition.ExpeditionCoreFile.FromString += ExpeditionCoreFile_FromString;
+            On.Expedition.ExpeditionCoreFile.ToString += ExpeditionCoreFile_ToString1;
+        }
+
+        private string formatCoreFile(string s)
+        {
+            string formatted = s.Replace("<expC>", "<expC>\n");
+            formatted = formatted.Replace("<>", "<>\n\t");
+            formatted = Regex.Replace(formatted, @"(UNLOCKS:|NEWSONGS:|QUESTS:|MISSIONS:)", "$1\n\t");
+
+            formatted = Regex.Replace(formatted, @"(?<=\[CHALLENGES\]<expC>\n)(.*?)(?=\[END CHALLENGES\])",
+            m => Regex.Replace(m.Value, @"^(.+)$", "\t$1", RegexOptions.Multiline));
+
+            formatted = Regex.Replace(formatted, @"(?<=\[UNLOCKS\]<expC>\n)(.*?)(?=\[END UNLOCKS\])",
+                m => Regex.Replace(m.Value, @"^(.+)$", "\t$1", RegexOptions.Multiline));
+
+            formatted = Regex.Replace(formatted, @"(?<=\[PASSAGES\]<expC>\n)(.*?)(?=\[END PASSAGES\])",
+                m => Regex.Replace(m.Value, @"^(.+)$", "\t$1", RegexOptions.Multiline));
+
+            formatted = Regex.Replace(formatted, @"(?<=\[CONTENT\]<expC>\n)(.*?)(?=\[END CONTENT\])",
+                m => Regex.Replace(m.Value, @"^(.+)$", "\t$1", RegexOptions.Multiline));
+
+            formatted = Regex.Replace(formatted, @"(?<=\[ONLINEMENU\]<expC>\n)(.*?)(?=\[END ONLINEMENU\])",
+                m => Regex.Replace(m.Value, @"^(.+)$", "\t$1", RegexOptions.Multiline));
+
+            return formatted;
+        }
+
+        private string ExpeditionCoreFile_ToString1(On.Expedition.ExpeditionCoreFile.orig_ToString orig, ExpeditionCoreFile self)
+        {
+            var s = orig(self);
+            if (isExpeditionMode(out _))
+            {
+
+                List<string> onlineData = new List<string>();
+                onlineData.Add("[ONLINEDATA]");
+
+                onlineData.Add($"CUSTOMCOLORS:{(ExpeditionOnlineCoreFIle.customColors? 1 : 0)}");
+                onlineData.Add($"ISPUP:{(ExpeditionOnlineCoreFIle.isPup ? 1 : 0)}");
+
+                onlineData.Add("[END ONLINEDATA]");
+
+                string output = s + "<expC>" + string.Join("<expC>", onlineData.ToArray());
+
+                RainMeadow.Debug($"\n{formatCoreFile(output)}");
+                return output;
+            }
+
+            return s;
+        }
+
+        private void ExpeditionCoreFile_FromString(On.Expedition.ExpeditionCoreFile.orig_FromString orig, ExpeditionCoreFile self, string saveString)
+        {
+            orig(self, saveString);
+            if (isExpeditionMode(out _))
+            {
+
+                string[] s = System.Text.RegularExpressions.Regex.Split(saveString, "<expC>");
+                bool onlineData = false;
+                for (int i = 0; i < s.Length; i++)
+                {
+                    if (s[i] == "[ONLINEDATA]") onlineData = true;
+                    if (s[i] == "[END ONLINEDATA]") break;
+
+                    if (onlineData)
+                    {
+                        if (s[i].StartsWith("CUSTOMCOLORS:"))
+                        {
+                            ExpeditionOnlineCoreFIle.customColors = Regex.Split(s[i], ":")[1] == "1";
+                        }
+                        if (s[i].StartsWith("ISPUP:"))
+                        {
+                            ExpeditionOnlineCoreFIle.isPup = Regex.Split(s[i], ":")[1] == "1";
+                        }
+                    }
+                }
+
+                RainMeadow.Debug($"\n{formatCoreFile(saveString)}");
+            }
         }
 
         private void PinChallenge_ctor(On.Expedition.PinChallenge.orig_ctor orig, PinChallenge self)
