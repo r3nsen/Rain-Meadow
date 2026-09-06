@@ -4,7 +4,7 @@ namespace RainMeadow
 {
     public class ExpeditionGameMode : StoryGameMode//OnlineGameMode//
     {
-        public int slugcatSelected;
+        public int slugcatCampaingSelected;
         public bool needSlugUpdate = false;
         public bool hasSaveState;
 

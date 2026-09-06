@@ -42,18 +42,7 @@ namespace RainMeadow
             On.Expedition.ExpeditionCoreFile.FromString += unlockAllMeadowMusics;            
             On.Expedition.ExpeditionProgression.GetUnlockedSongs += ExpeditionProgression_GetUnlockedSongs;
             On.Expedition.PinChallenge.Reset += PinChallenge_Reset;
-            On.Expedition.PinChallenge.ctor += PinChallenge_ctor;
-            // On.Player.Update += logview;
-        }
-
-        private void logview(On.Player.orig_Update orig, Player self, bool eu)
-        {
-            orig(self, eu);
-            if (isStoryMode(out var ex))
-            {
-                // canJoinGame => isInGame && !changedRegions && readyForTransition == ReadyForTransition.Closed && !readyForWin;
-                r3n.viewLog($"canJoinGame: {ex.canJoinGame}, isInGame: {ex.isInGame}, !changedRegions: {!ex.changedRegions}, readyForTransition: {ex.readyForTransition}, !readyForWin: {!ex.readyForWin} ", self.room);
-            }
+            On.Expedition.PinChallenge.ctor += PinChallenge_ctor;         
         }
 
         private void PinChallenge_ctor(On.Expedition.PinChallenge.orig_ctor orig, PinChallenge self)
@@ -471,13 +460,13 @@ namespace RainMeadow
 
         private void CharacterSelectPage_LoadGame(On.Menu.CharacterSelectPage.orig_LoadGame orig, CharacterSelectPage self)
         {
-            ExpeditionOnlineMenu.pre_start();
+            if(self.menu is ExpeditionOnlineMenu om) om.pre_start();
             orig(self);
         }
 
         private void ChallengeSelectPage_StartGame(On.Menu.ChallengeSelectPage.orig_StartGame orig, ChallengeSelectPage self)
         {
-            ExpeditionOnlineMenu.pre_start();            
+            if (self.menu is ExpeditionOnlineMenu om) om.pre_start();
             orig(self);
         }
 

@@ -98,7 +98,7 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
             readyForWin = expeditionGameMode.readyForWin;
             readyForTransition = (byte)expeditionGameMode.readyForTransition;
             saveStateString = expeditionGameMode.saveStateString;
-            selectedSlugcat = expeditionGameMode.slugcatSelected;
+            selectedSlugcat = expeditionGameMode.slugcatCampaingSelected;
             currentCampaign = expeditionGameMode.currentCampaign;
 
             if (currentCampaign is not null)
@@ -200,9 +200,9 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
 
             expedition.hasSaveState = hasSaveState;
 
-            if (expedition.slugcatSelected != selectedSlugcat)
+            if (expedition.slugcatCampaingSelected != selectedSlugcat)
             {
-                expedition.slugcatSelected = selectedSlugcat;
+                expedition.slugcatCampaingSelected = selectedSlugcat;
                 expedition.needSlugUpdate = true;
             }
 

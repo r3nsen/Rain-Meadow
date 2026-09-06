@@ -1,11 +1,12 @@
 using Menu;
 using UnityEngine;
 using Expedition;
-using static Menu.SlugcatSelectMenu;
 using System.Collections.Generic;
-using RainMeadow.Generics;
 using Steamworks;
 using System.Linq;
+using System.Globalization;
+
+using static Menu.SlugcatSelectMenu;
 
 namespace RainMeadow
 {
@@ -20,8 +21,13 @@ namespace RainMeadow
         private CheckBox reqCampaignSlug;
         private MenuLabel? lobbyLabel, slugcatLabel;
 
+        private bool jollyStarted;
+
         public ExpeditionOnlineMenu(ProcessManager manager) : base(manager)
         {
+            playerSelectedSlugcats = new SlugcatStats.Name[4];
+            SetupSelectableSlugcats();
+            ID = OnlineManager.lobby.gameMode.MenuProcessId(); // conferir
             expeditionGameMode = (ExpeditionGameMode)OnlineManager.lobby.gameMode;
             expeditionGameMode.Sanitize();
 
@@ -30,14 +36,14 @@ namespace RainMeadow
             {
                 expeditionGameMode.currentCampaign = ExpeditionData.slugcatPlayer;
                 expeditionGameMode.saveToDisk = true;
-                expeditionGameMode.slugcatSelected = currentSelection;
+                expeditionGameMode.slugcatCampaingSelected = currentSelection;
 
                 if (MatchmakingManager.currentInstance is SteamMatchmakingManager steamMatchmakingManager)
                     SteamMatchmaking.SetLobbyData(steamMatchmakingManager.lobbyID, MatchmakingManager.CAMPAIGN_KEY, "");
             }
             else
             {
-                currentSelection = expeditionGameMode.slugcatSelected;
+                currentSelection = expeditionGameMode.slugcatCampaingSelected;
                 expeditionGameMode.needSlugUpdate = true;
             }
 
@@ -49,14 +55,15 @@ namespace RainMeadow
             SetupOnlineMenuItens();
 
             // player list
-            
+
             UpdatePlayerList();
             MatchmakingManager.OnPlayerListReceived += OnlineManager_OnPlayerListReceived;
-            
+
             // ---
 
             ChatTextBox.OnShutDownRequest += ResetChatInput;
             ChatLogManager.MessageLogged += OnMessageLogged;
+
 
         }
 
@@ -100,7 +107,7 @@ namespace RainMeadow
             if (OnlineManager.lobby.isOwner)
             {
                 SetCampaign(ExpeditionData.slugcatPlayer);
-                expeditionGameMode.slugcatSelected = currentSelection;
+                expeditionGameMode.slugcatCampaingSelected = currentSelection;
 
                 if (characterSelect != null)
                 {
@@ -111,7 +118,7 @@ namespace RainMeadow
             }
             else
             {
-                currentSelection = expeditionGameMode.slugcatSelected;
+                currentSelection = expeditionGameMode.slugcatCampaingSelected;
                 if (characterSelect != null)
                 {
                     characterSelect.abandonButton.bumpBehav.greyedOut = true;
@@ -129,13 +136,13 @@ namespace RainMeadow
             if (characterSelect != null && expeditionGameMode.needSlugUpdate)
             {
                 expeditionGameMode.needSlugUpdate = false;
-                characterSelect.UpdateSelectedSlugcat(expeditionGameMode.slugcatSelected);
+                characterSelect.UpdateSelectedSlugcat(expeditionGameMode.slugcatCampaingSelected);
 
                 if (!OnlineManager.lobby.isOwner)
                 {
                     for (int i = 0; i < characterSelect.slugcatButtons.Length; i++)
                     {
-                        characterSelect.slugcatButtons[i].buttonBehav.greyedOut = expeditionGameMode.slugcatSelected != i;
+                        characterSelect.slugcatButtons[i].buttonBehav.greyedOut = expeditionGameMode.slugcatCampaingSelected != i;
                     }
                 }
                 else
@@ -166,9 +173,33 @@ namespace RainMeadow
                     }
                 }
             }
+            if (!jollyStarted && false)
+            {
+                if (characterSelect != null)
+                {
+                    jollyStarted = true;
+                    if (ModManager.JollyCoop)
+                    {
+                        new Vector2(50f, characterSelect.menu.manager.rainWorld.screenSize.y - 100f);
+                        characterSelect.jollyToggleConfigMenu = new SymbolButton(characterSelect.menu, characterSelect, "coop", "JOLLY_TOGGLE_CONFIG", new UnityEngine.Vector2(440f, 550f));
+                        characterSelect.jollyToggleConfigMenu.roundedRect.size = new UnityEngine.Vector2(50f, 50f);
+                        characterSelect.jollyToggleConfigMenu.size = characterSelect.jollyToggleConfigMenu.roundedRect.size;
+                        characterSelect.subObjects.Add(characterSelect.jollyToggleConfigMenu);
+                        characterSelect.jollyPlayerCountLabel = new Menu.MenuLabel(characterSelect.menu, characterSelect, characterSelect.menu.Translate("Expedition-Players").Replace("<num_p>", Menu.Remix.ValueConverter.ConvertToString<int>(RWCustom.Custom.rainWorld.options.JollyPlayerCount)), characterSelect.jollyToggleConfigMenu.pos + new UnityEngine.Vector2(characterSelect.jollyToggleConfigMenu.size.x / 2f, -20f), UnityEngine.Vector2.zero, false, null);
+                        characterSelect.jollyPlayerCountLabel.label.color = new UnityEngine.Color(0.7f, 0.7f, 0.7f);
+                        characterSelect.subObjects.Add(characterSelect.jollyPlayerCountLabel);
+                    }
+                }
+            }
+
+            SetupSlugcatList();
+            if (slugcatSelector != null)
+            {
+                slugcatSelector.Slug = PlayerSelectedSlugcat;
+            }
         }
 
-        public static void pre_start()
+        public void pre_start()
         {
             if (OnlineManager.lobby != null)
             {
@@ -178,14 +209,62 @@ namespace RainMeadow
                 }
 
                 var expeditionGameMode = ExpeditionOnlineMenu.expeditionGameMode;
-                for (int i = 0; i < expeditionGameMode.avatarSettings.Length; i++)
-                {
-                    expeditionGameMode.avatarSettings[i].playingAs = expeditionGameMode.currentCampaign;
-                }
+
+                var jollyallowed = false;// ModManager.JollyCoop;// && base.CheckJollyCoopAvailable(slugcatColorOrder[slugcatPageIndex]);
+                expeditionGameMode.avatarCount = jollyallowed ? manager.rainWorld.options.JollyPlayerCount : 1;
+                if (jollyallowed) PlayerGraphics.PopulateJollyColorArray(PlayerSelectedSlugcat);
 
                 for (int i = 0; i < expeditionGameMode.avatarSettings.Length; i++)
                 {
+                    expeditionGameMode.avatarSettings[i].playingAs = expeditionGameMode.currentCampaign;
+                    if (!expeditionGameMode.requireCampaignSlugcat && (playerSelectedSlugcats[i] is SlugcatStats.Name name))
+                    {
+                        expeditionGameMode.avatarSettings[i].playingAs = name;
+                    }
+                    //expeditionGameMode.avatarSettings[i].playingAs = expeditionGameMode.currentCampaign;             
                     expeditionGameMode.avatarSettings[i].currentColors = [.. PlayerGraphics.DefaultBodyPartColorHex(expeditionGameMode.avatarSettings[i].playingAs).Select(RWCustom.Custom.hexToColor)];
+
+                    if (jollyallowed)
+                    {
+                        if (manager.rainWorld.options.jollyColorMode == Options.JollyColorMode.CUSTOM)
+                        {
+                            expeditionGameMode.avatarSettings[i].currentColors = new List<Color>
+                            {
+                                manager.rainWorld.options.jollyPlayerOptionsArray[i].GetBodyColor(),
+                                manager.rainWorld.options.jollyPlayerOptionsArray[i].GetFaceColor(),
+                                manager.rainWorld.options.jollyPlayerOptionsArray[i].GetUniqueColor()
+                            };
+
+                        }
+                        else if (manager.rainWorld.options.jollyColorMode == Options.JollyColorMode.AUTO)
+                        {
+                            if (i == 0)
+                            {
+                                expeditionGameMode.avatarSettings[i].currentColors = [.. PlayerGraphics.DefaultBodyPartColorHex(expeditionGameMode.avatarSettings[i].playingAs).Select(RWCustom.Custom.hexToColor)];
+                            }
+                            else
+                            {
+                                expeditionGameMode.avatarSettings[i].currentColors = new List<Color>
+                            {
+                                PlayerGraphics.JollyColor(i, 0),
+                                PlayerGraphics.JollyColor(i, 1),
+                                PlayerGraphics.JollyColor(i, 2)
+                            };
+                            }
+                        }
+                        else
+                        {
+                            expeditionGameMode.avatarSettings[i].currentColors = [.. PlayerGraphics.DefaultBodyPartColorHex(expeditionGameMode.avatarSettings[i].playingAs).Select(RWCustom.Custom.hexToColor)];
+                        }
+                        expeditionGameMode.avatarSettings[i].fakePup = manager.rainWorld.options.jollyPlayerOptionsArray[i].isPup;
+                    }
+                    else
+                    {
+                        // TODO: seperate custom colors for each avatar
+                        RainMeadow.Debug($"currentColors: {expeditionGameMode.avatarSettings[i].currentColors} = expeditionGameMode.avatarSettings[{i}].playingAs: {expeditionGameMode.avatarSettings[i].playingAs}");
+                        expeditionGameMode.avatarSettings[i].currentColors = manager.rainWorld.progression.GetCustomColors(expeditionGameMode.avatarSettings[i].playingAs); //abt colors, color config updates to campaign when required campaign is on. Client side, the host still needs to be in the menu to update it so they will notice the color config update
+                        expeditionGameMode.avatarSettings[i].fakePup = true;
+                    }
                 }
             }
             if (MatchmakingManager.currentInstance is SteamMatchmakingManager steamMatchmakingManager)
@@ -237,14 +316,44 @@ namespace RainMeadow
                 manager.RequestMainProcessSwitch(RainMeadow.Ext_ProcessID.LobbySelectMenu);
                 return;
             }
-            
+
+            if (message.StartsWith("MMFCUSTOMCOLOR"))
+            {
+                PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
+                int num = int.Parse(message.Substring("MMFCUSTOMCOLOR".Length), NumberStyles.Any, CultureInfo.InvariantCulture);
+                if (num == activeColorChooser)
+                {
+                    RemoveColorInterface();
+                    PlaySound(SoundID.MENU_Remove_Level);
+                }
+                else
+                {
+                    activeColorChooser = num;
+                    AddColorInterface();
+                    PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
+                }
+            }
+            if (message == "DEFAULTCOL")
+            {
+                SlugcatStats.Name name = PlayerSelectedSlugcat;
+                int index = activeColorChooser;
+                manager.rainWorld.progression.miscProgressionData.colorChoices[name.value][index] = colorInterface.defaultColors[activeColorChooser];
+                float f = ValueOfSlider(hueSlider);
+                float f2 = ValueOfSlider(satSlider);
+                float f3 = ValueOfSlider(litSlider);
+                SliderSetValue(hueSlider, f);
+                SliderSetValue(satSlider, f2);
+                SliderSetValue(litSlider, f3);
+                PlaySound(SoundID.MENU_Remove_Level);
+            }
+
             base.Singal(sender, message);
 
             if (message == "LEFT")
             {
-                if(currentPage == 3)
+                if (currentPage == 3)
                     UpdateOnlinePage(2);
-                else if(currentPage == 2)
+                else if (currentPage == 2)
                     UpdateOnlinePage(1);
             }
             if (message == "RIGHT")
@@ -255,10 +364,10 @@ namespace RainMeadow
             if (message == "NEW")
             {
                 if (currentPage == 1)
-                    UpdateOnlinePage(2);            
+                    UpdateOnlinePage(2);
             }
 
-            
+
         }
     }
 }
