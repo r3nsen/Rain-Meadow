@@ -1,6 +1,9 @@
 ﻿using Expedition;
 using Menu;
 using MoreSlugcats;
+
+using RainMeadow.UI.Components;
+
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -49,7 +52,8 @@ namespace RainMeadow
         private StoryMenuSlugcatSelector? slugcatSelector;
 
         private Vector2 lobbylabelPos;
-        private ChatTextBox chatTextBox;
+        // private ChatTextBox chatTextBox;
+        private ChatMenuBox chatMenuBox;
         private Vector2 chatTextBoxPos;
 
         CheckBox customColorsCheckbox;
@@ -137,11 +141,11 @@ namespace RainMeadow
                 lobbyLabel.pos = lobbylabelPos - pagePos;
                 lobbyLabel.lastPos = lobbylabelPos - pageLastPos;
 
-                chatTextBox?.pos = chatTextBoxPos + new Vector2(24, 0) - pagePos;
-                chatTextBox?.lastPos = chatTextBoxPos + new Vector2(24, 0) - pageLastPos;
+                chatMenuBox?.pos = chatTextBoxPos + new Vector2(24, 0) - pagePos;
+                chatMenuBox?.lastPos = chatTextBoxPos + new Vector2(24, 0) - pageLastPos;
 
-                chatTextBox?.roundedRect.pos = new Vector2(24 + 4.4f, 0) - pagePos;
-                chatTextBox?.roundedRect.lastPos = new Vector2(24 + 4.4f, 0) - pageLastPos;
+                chatMenuBox?.roundedRect.pos = new Vector2(24 + 4.4f, 0) - pagePos;
+                chatMenuBox?.roundedRect.lastPos = new Vector2(24 + 4.4f, 0) - pageLastPos;
 
                 toggleChat.pos = /*chatTextBoxPos +*/ new Vector2(4.4f, 0) - pagePos;
                 toggleChat.lastPos = /*chatTextBoxPos +*/ new Vector2(4.4f, 0) - pageLastPos;
@@ -198,8 +202,8 @@ namespace RainMeadow
             playerScrollBox?.RemoveAllButtons(false);
             pages[currentPage].ClearMenuObject(ref playerScrollBox);
 
-            this.chatTextBox?.DelayedUnload(0.1f);
-            pages[currentPage].ClearMenuObject(ref chatTextBox);
+            //this.chatMenuBox?.DelayedUnload(0.1f);
+            pages[currentPage].ClearMenuObject(ref chatMenuBox);
 
             pages[currentPage].ClearMenuObject(ref customColorsCheckbox);
             pages[currentPage].ClearMenuObject(ref isPupCheckbox);
@@ -410,7 +414,6 @@ namespace RainMeadow
                         bodyColorsPos[i] = colorInterface.bodyColors[i].pos;
                         bodyColorsLastPos[i] = colorInterface.bodyColors[i].lastPos;
                     }
-
                 }
             }
         }

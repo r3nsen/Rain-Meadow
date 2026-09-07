@@ -60,8 +60,7 @@ namespace RainMeadow
             MatchmakingManager.OnPlayerListReceived += OnlineManager_OnPlayerListReceived;
 
             ChatTextBox.OnShutDownRequest += ResetChatInput;
-            ChatLogManager.MessageLogged += OnMessageLogged;
-
+            
             SetChecked(isPupCheckbox, ExpeditionOnlineCoreFIle.isPup);
         }
 
@@ -152,25 +151,7 @@ namespace RainMeadow
                     }
                 }
             }
-            if (isChatToggled)
-            {
-                if (Input.GetKey(KeyCode.UpArrow))
-                {
-                    if (currentLogIndex < ChatLogManager.chatLog.Count - 1)
-                    {
-                        currentLogIndex++;
-                        UpdateLogDisplay();
-                    }
-                }
-                else if (Input.GetKey(KeyCode.DownArrow))
-                {
-                    if (currentLogIndex > 0)
-                    {
-                        currentLogIndex--;
-                        UpdateLogDisplay();
-                    }
-                }
-            }
+            
             if (!jollyStarted && false)
             {
                 if (characterSelect != null)
@@ -296,7 +277,6 @@ namespace RainMeadow
             isChatToggled = false;
             ResetChatInput();
             ChatTextBox.OnShutDownRequest -= ResetChatInput;
-            ChatLogManager.MessageLogged -= OnMessageLogged;
 
             RainMeadow.DebugMe();
             var up = manager.upcomingProcess;
