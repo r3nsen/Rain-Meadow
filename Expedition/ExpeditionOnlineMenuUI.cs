@@ -128,7 +128,7 @@ namespace RainMeadow
                 UpdatePlayerList();
             }
         }
-
+        float offscreen = 0;
         private void UpdateUI()
         {
             if (this.pagesMoving || _pagesMoving)
@@ -137,11 +137,18 @@ namespace RainMeadow
 
                 float offset = 0;// 2.9f;
 
+                if (_currentPage == 3) offscreen = Mathf.Lerp(offscreen, 1, .06f);
+                else offscreen = Mathf.Lerp(offscreen, 0, .2f);
+
+                Mathf.Clamp(offscreen, 0f, 1f);
+
                 Vector2 pagePos = new Vector2(pages[_currentPage].pos.x + leftAnchor + offset, 0) * usePagePos;
                 Vector2 pageLastPos = new Vector2(pages[_currentPage].lastPos.x + leftAnchor + offset, 0) * usePagePos;
 
-                lobbyLabel.pos = lobbylabelPos - pagePos;
-                lobbyLabel.lastPos = lobbylabelPos - pageLastPos;
+                Vector2 makeOffscreen = new Vector2(300, 0) * offscreen;
+
+                lobbyLabel.pos = lobbylabelPos - pagePos + makeOffscreen;
+                lobbyLabel.lastPos = lobbylabelPos - pageLastPos + makeOffscreen;
 
                 chatMenuBox?.pos = chatTextBoxPos + new Vector2(24, 0) - pagePos;
                 chatMenuBox?.lastPos = chatTextBoxPos + new Vector2(24, 0) - pageLastPos;
@@ -152,16 +159,16 @@ namespace RainMeadow
                 toggleChat.pos = chatTextBoxPos - pagePos;
                 toggleChat.lastPos = chatTextBoxPos - pageLastPos;
 
-                playerScrollBox.pos = playerScrollBoxPos - pagePos;
-                playerScrollBox.lastPos = playerScrollBoxPos - pageLastPos;
+                playerScrollBox.pos = playerScrollBoxPos - pagePos + makeOffscreen;
+                playerScrollBox.lastPos = playerScrollBoxPos - pageLastPos + makeOffscreen;
 
                 Vector2 slugcatLabelpos = new(leftAnchor + 70, 553);
                 Vector2 slugcatSelectorpos = new(slugcatLabelpos.x, slugcatLabelpos.y - (ButtonSize * 2));
 
-                slugcatLabel.pos = slugcatLabelpos - pagePos;
-                slugcatLabel.lastPos = slugcatLabelpos - pageLastPos;
-                slugcatSelector.pos = slugcatSelectorpos - pagePos;
-                slugcatSelector.lastPos = slugcatSelectorpos - pageLastPos;
+                slugcatLabel.pos = slugcatLabelpos - pagePos - makeOffscreen;
+                slugcatLabel.lastPos = slugcatLabelpos - pageLastPos - makeOffscreen;
+                slugcatSelector.pos = slugcatSelectorpos - pagePos - makeOffscreen;
+                slugcatSelector.lastPos = slugcatSelectorpos - pageLastPos - makeOffscreen;
 
 
                 float restartTextWidth = GetRestartTextWidth(base.CurrLang);
@@ -169,15 +176,15 @@ namespace RainMeadow
 
                 Vector2 pos = new(leftAnchor + 60 + restartTextWidth, 550 + 40);
 
-                colorConfigButton.pos = pos - pagePos;
-                colorConfigButton.lastPos = pos - pageLastPos;
+                colorConfigButton.pos = pos - pagePos - makeOffscreen;
+                colorConfigButton.lastPos = pos - pageLastPos - makeOffscreen;
                 //customColorsCheckbox.pos = pos - pagePos;
                 //customColorsCheckbox.lastPos = pos - pageLastPos;
 
                 pos = new(leftAnchor + 20 + restartTextWidth, 520 + 70);
 
-                isPupCheckbox.pos = pos - pagePos;
-                isPupCheckbox.lastPos = pos - pageLastPos;
+                isPupCheckbox.pos = pos - pagePos - makeOffscreen;
+                isPupCheckbox.lastPos = pos - pageLastPos - makeOffscreen;
 
                 // why...
                 //if (colorInterface != null)
@@ -194,6 +201,10 @@ namespace RainMeadow
                 //}
                 _pagesMoving = pagesMoving;
             }
+            //else
+            //{
+            //    offscreen = (_currentPage == 3 ? 1 : 0);
+            //}
         }
         void UpdateOnlinePage(int pageIndex)
         {
