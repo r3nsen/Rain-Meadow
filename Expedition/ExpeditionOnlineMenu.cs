@@ -52,6 +52,8 @@ namespace RainMeadow
                 ? ButtonScroller.TextAnchor.Bottom
                 : ButtonScroller.TextAnchor.Top;
 
+            Futile.atlasManager.LoadAtlas("illustrations/arena_ui_elements");
+
             SetupOnlineMenuItens();
 
             // player list
@@ -175,12 +177,12 @@ namespace RainMeadow
 
             slugcatSelector.Slug = PlayerSelectedSlugcat;
 
-            if (!colorsChecked && !manager.rainWorld.progression.loadInProgress)
-            {
-                colorsChecked = true;
-                SetSelectedSlugcat(0, PlayerSelectedSlugcat);
-                SetChecked(customColorsCheckbox, manager.rainWorld.progression.miscProgressionData.colorsEnabled.ContainsKey(PlayerSelectedSlugcat.value) && manager.rainWorld.progression.miscProgressionData.colorsEnabled[PlayerSelectedSlugcat.value]);
-            }
+            //if (!colorsChecked && !manager.rainWorld.progression.loadInProgress)
+            //{
+            //    colorsChecked = true;
+            //    SetSelectedSlugcat(0, PlayerSelectedSlugcat);
+            //    //SetChecked(customColorsCheckbox, manager.rainWorld.progression.miscProgressionData.colorsEnabled.ContainsKey(PlayerSelectedSlugcat.value) && manager.rainWorld.progression.miscProgressionData.colorsEnabled[PlayerSelectedSlugcat.value]);
+            //}
         }
 
         public void pre_start()
@@ -250,6 +252,12 @@ namespace RainMeadow
                     }
                 }
             }
+
+            if (colorConfigDialog != null)
+            {
+                manager.StopSideProcess(colorConfigDialog); //force getting rid of dialog
+            }
+
             if (MatchmakingManager.currentInstance is SteamMatchmakingManager steamMatchmakingManager)
                 SteamMatchmaking.SetLobbyData(steamMatchmakingManager.lobbyID, MatchmakingManager.CAMPAIGN_KEY, expeditionGameMode.currentCampaign.value);
         }
@@ -297,38 +305,27 @@ namespace RainMeadow
                 manager.RequestMainProcessSwitch(RainMeadow.Ext_ProcessID.LobbySelectMenu);
                 return;
             }
-
-            if (message.StartsWith("MMFCUSTOMCOLOR"))
-            {
-                PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
-                int num = int.Parse(message.Substring("MMFCUSTOMCOLOR".Length), NumberStyles.Any, CultureInfo.InvariantCulture);
-                if (num == activeColorChooser)
-                {
-                    RemoveColorInterface();
-                    PlaySound(SoundID.MENU_Remove_Level);
-                }
-                else
-                {
-                    activeColorChooser = num;
-                    AddColorInterface();
-                    PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
-                }
-            }
-            if (message == "DEFAULTCOL")
-            {
-                SlugcatStats.Name name = PlayerSelectedSlugcat;
-                int index = activeColorChooser;
-                manager.rainWorld.progression.miscProgressionData.colorChoices[name.value][index] = colorInterface.defaultColors[activeColorChooser];
-                float f = ValueOfSlider(hueSlider);
-                float f2 = ValueOfSlider(satSlider);
-                float f3 = ValueOfSlider(litSlider);
-                SliderSetValue(hueSlider, f);
-                SliderSetValue(satSlider, f2);
-                SliderSetValue(litSlider, f3);
-                PlaySound(SoundID.MENU_Remove_Level);
-            }
+           
+            //if (message == "DEFAULTCOL")
+            //{
+            //    SlugcatStats.Name name = PlayerSelectedSlugcat;
+            //    int index = activeColorChooser;
+            //    manager.rainWorld.progression.miscProgressionData.colorChoices[name.value][index] = colorInterface.defaultColors[activeColorChooser];
+            //    float f = ValueOfSlider(hueSlider);
+            //    float f2 = ValueOfSlider(satSlider);
+            //    float f3 = ValueOfSlider(litSlider);
+            //    SliderSetValue(hueSlider, f);
+            //    SliderSetValue(satSlider, f2);
+            //    SliderSetValue(litSlider, f3);
+            //    PlaySound(SoundID.MENU_Remove_Level);
+            //}
 
             base.Singal(sender, message);
+
+            if (message == "COLOR_SLUGCAT")
+            {
+                OpenColorConfig(PlayerSelectedSlugcat);
+            }
 
             if (message == "LEFT")
             {
