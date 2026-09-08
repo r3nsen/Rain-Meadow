@@ -47,6 +47,14 @@ namespace RainMeadow
 
             On.Expedition.ExpeditionCoreFile.FromString += ExpeditionCoreFile_FromString;
             On.Expedition.ExpeditionCoreFile.ToString += ExpeditionCoreFile_ToString1;
+            On.Expedition.ExpeditionProgression.CheckUnlocked += ExpeditionProgression_CheckUnlocked;
+        }
+
+        private bool ExpeditionProgression_CheckUnlocked(On.Expedition.ExpeditionProgression.orig_CheckUnlocked orig, ProcessManager manager, SlugcatStats.Name slugcat)
+        {
+
+            if (isExpeditionMode(out _)) return true;
+            return orig(manager, slugcat);
         }
 
         private string formatCoreFile(string s)
