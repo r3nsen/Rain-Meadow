@@ -267,10 +267,13 @@ namespace RainMeadow
             return expeditionGameMode.menuSaveGameData;
         }
 
+        bool firstTimeCampaingSet;
         public void SetCampaign(SlugcatStats.Name campaign)
         {
-            if (expeditionGameMode.currentCampaign == campaign && expeditionGameMode.menuSaveState != null) return;
+            if (expeditionGameMode.currentCampaign == campaign && /*expeditionGameMode.menuSaveState != null && */firstTimeCampaingSet) return;
             expeditionGameMode.currentCampaign = campaign;
+            if(!manager.rainWorld.progression.loadInProgress)
+                firstTimeCampaingSet = true;
 
             SaveGameData sgd = MineForSaveData(RWCustom.Custom.rainWorld.processManager, campaign);
 
