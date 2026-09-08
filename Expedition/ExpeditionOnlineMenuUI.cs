@@ -73,11 +73,11 @@ namespace RainMeadow
 
         void SetupOnlineMenuItens()
         {
-            lobbylabelPos = new Vector2(manager.rainWorld.screenSize.x - 170, 553);
+            lobbylabelPos = new Vector2(rightAnchor - 170, 553);
             lobbyLabel = new MenuLabel(this, pages[_currentPage], Translate("LOBBY"), lobbylabelPos, new(110, 30), true);
             pages[_currentPage].subObjects.Add(lobbyLabel);
 
-            this.chatTextBoxPos = new Vector2(this.manager.rainWorld.options.ScreenSize.x * 0.001f + (1366f - this.manager.rainWorld.options.ScreenSize.x) / 2f, 0);
+            this.chatTextBoxPos = new Vector2(leftAnchor, 0);
             toggleChat = new SimplerSymbolButton(this, pages[_currentPage], "Kill_Slugcat", "", this.chatTextBoxPos);
             toggleChat.OnClick += (_) =>
             {
@@ -108,7 +108,7 @@ namespace RainMeadow
             playerScrollBox?.RemoveAllButtons(false);
             if (playerScrollBox == null)
             {
-                playerScrollBoxPos = new(manager.rainWorld.screenSize.x - 170, 553 - 30 - ButtonScroller.CalculateHeightBasedOnAmtOfButtons(MaxVisibleOnList, ButtonSize, ButtonSpacingOffset));
+                playerScrollBoxPos = new(rightAnchor - 170, 553 - 30 - ButtonScroller.CalculateHeightBasedOnAmtOfButtons(MaxVisibleOnList, ButtonSize, ButtonSpacingOffset));
                 playerScrollBox = new(this, pages[_currentPage], playerScrollBoxPos, MaxVisibleOnList, 200, new(ButtonSize, ButtonSpacingOffset));
                 pages[_currentPage].subObjects.Add(playerScrollBox);
             }
@@ -135,10 +135,10 @@ namespace RainMeadow
             {
                 int usePagePos = (pagesMoving || !_pagesMoving) ? 1 : 0;
 
-                float offset = 2.9f;
+                float offset = 0;// 2.9f;
 
-                Vector2 pagePos = new Vector2(pages[_currentPage].pos.x + offset, 0) * usePagePos;
-                Vector2 pageLastPos = new Vector2(pages[_currentPage].lastPos.x + offset, 0) * usePagePos;
+                Vector2 pagePos = new Vector2(pages[_currentPage].pos.x + leftAnchor + offset, 0) * usePagePos;
+                Vector2 pageLastPos = new Vector2(pages[_currentPage].lastPos.x + leftAnchor + offset, 0) * usePagePos;
 
                 lobbyLabel.pos = lobbylabelPos - pagePos;
                 lobbyLabel.lastPos = lobbylabelPos - pageLastPos;
@@ -146,16 +146,16 @@ namespace RainMeadow
                 chatMenuBox?.pos = chatTextBoxPos + new Vector2(24, 0) - pagePos;
                 chatMenuBox?.lastPos = chatTextBoxPos + new Vector2(24, 0) - pageLastPos;
 
-                chatMenuBox?.roundedRect.pos = new Vector2(24 + 4.4f, 0) - pagePos;
-                chatMenuBox?.roundedRect.lastPos = new Vector2(24 + 4.4f, 0) - pageLastPos;
+                //chatMenuBox?.roundedRect.pos = new Vector2(24 + 4.4f, 0) - pagePos;
+                //chatMenuBox?.roundedRect.lastPos = new Vector2(24 + 4.4f, 0) - pageLastPos;
 
-                toggleChat.pos = /*chatTextBoxPos +*/ new Vector2(4.4f, 0) - pagePos;
-                toggleChat.lastPos = /*chatTextBoxPos +*/ new Vector2(4.4f, 0) - pageLastPos;
+                toggleChat.pos = chatTextBoxPos - pagePos;
+                toggleChat.lastPos = chatTextBoxPos - pageLastPos;
 
                 playerScrollBox.pos = playerScrollBoxPos - pagePos;
                 playerScrollBox.lastPos = playerScrollBoxPos - pageLastPos;
 
-                Vector2 slugcatLabelpos = new(70, 553);
+                Vector2 slugcatLabelpos = new(leftAnchor + 70, 553);
                 Vector2 slugcatSelectorpos = new(slugcatLabelpos.x, slugcatLabelpos.y - (ButtonSize * 2));
 
                 slugcatLabel.pos = slugcatLabelpos - pagePos;
@@ -167,14 +167,14 @@ namespace RainMeadow
                 float restartTextWidth = GetRestartTextWidth(base.CurrLang);
                 //float restartTextOffset = GetRestartTextOffset(base.CurrLang);
 
-                Vector2 pos = new(60 + restartTextWidth, 550 + 40);
+                Vector2 pos = new(leftAnchor + 60 + restartTextWidth, 550 + 40);
 
                 colorConfigButton.pos = pos - pagePos;
                 colorConfigButton.lastPos = pos - pageLastPos;
                 //customColorsCheckbox.pos = pos - pagePos;
                 //customColorsCheckbox.lastPos = pos - pageLastPos;
 
-                pos = new(20 + restartTextWidth, 520 + 70);
+                pos = new(leftAnchor + 20 + restartTextWidth, 520 + 70);
 
                 isPupCheckbox.pos = pos - pagePos;
                 isPupCheckbox.lastPos = pos - pageLastPos;
@@ -207,7 +207,7 @@ namespace RainMeadow
             pages[currentPage].ClearMenuObject(ref playerScrollBox);
 
             //this.chatMenuBox?.DelayedUnload(0.1f);
-            pages[currentPage].ClearMenuObject(ref chatMenuBox);
+            //pages[currentPage].ClearMenuObject(ref chatMenuBox);
 
             // pages[currentPage].ClearMenuObject(ref customColorsCheckbox);
             pages[currentPage].ClearMenuObject(ref colorConfigButton);            
@@ -236,7 +236,7 @@ namespace RainMeadow
 
         private void SetupSlugcatList()
         {
-            Vector2 pos = new(70, 553);
+            Vector2 pos = new(leftAnchor + 70, 553);
             if (slugcatLabel == null)
             {
                 slugcatLabel = new(this, pages[_currentPage], Translate("Selected Slugcat").Replace("<LINE>", "\n"), pos, new(110, 30), true);
@@ -329,19 +329,19 @@ namespace RainMeadow
             return [.. slugcatButtons];
         }
 
-        public CustomColorInterface GetColorInterfaceForSlugcat(SlugcatStats.Name slugcatID, Vector2 pos)
-        {
-            List<string> names = PlayerGraphics.ColoredBodyPartList(slugcatID);
-            List<string> list = PlayerGraphics.DefaultBodyPartColorHex(slugcatID);
-            for (int i = 0; i < list.Count; i++)
-            {
-                Vector3 vector = RWCustom.Custom.RGB2HSL(RWCustom.Custom.hexToColor(list[i]));
-                list[i] = vector[0].ToString(CultureInfo.InvariantCulture) + "," + vector[1].ToString(CultureInfo.InvariantCulture) + "," + vector[2].ToString(CultureInfo.InvariantCulture);
-            }
+        //public CustomColorInterface GetColorInterfaceForSlugcat(SlugcatStats.Name slugcatID, Vector2 pos)
+        //{
+        //    List<string> names = PlayerGraphics.ColoredBodyPartList(slugcatID);
+        //    List<string> list = PlayerGraphics.DefaultBodyPartColorHex(slugcatID);
+        //    for (int i = 0; i < list.Count; i++)
+        //    {
+        //        Vector3 vector = RWCustom.Custom.RGB2HSL(RWCustom.Custom.hexToColor(list[i]));
+        //        list[i] = vector[0].ToString(CultureInfo.InvariantCulture) + "," + vector[1].ToString(CultureInfo.InvariantCulture) + "," + vector[2].ToString(CultureInfo.InvariantCulture);
+        //    }
 
-            //RainMeadow.Debug($"this: {this}, pages[{_currentPage}]: {pages[_currentPage]}, pos: {pos}, slugcatID: {slugcatID}, names: {names}, list: {list}");
-            return new CustomColorInterface(this, pages[_currentPage], pos, slugcatID, names, list);
-        }
+        //    //RainMeadow.Debug($"this: {this}, pages[{_currentPage}]: {pages[_currentPage]}, pos: {pos}, slugcatID: {slugcatID}, names: {names}, list: {list}");
+        //    return new CustomColorInterface(this, pages[_currentPage], pos, slugcatID, names, list);
+        //}
 
     }
     public partial class ExpeditionOnlineMenu : CheckBox.IOwnCheckBox
@@ -376,7 +376,7 @@ namespace RainMeadow
 
             if (ModManager.MMF)
             {
-                Vector2 pos = new(60, 550);
+                Vector2 pos = new(leftAnchor + 60, 550);
 
                 float restartTextWidth = GetRestartTextWidth(base.CurrLang);
                 //colorConfigButton = new(this, pages[_currentPage], "Kill_Slugcat", "", pos + new Vector2(restartTextWidth, 70));
@@ -390,7 +390,7 @@ namespace RainMeadow
                 //    //manager.ShowDialog(colorConfigDialog);
                 //    OpenColorConfig(playerSelectedSlugcats[0]);
                 //};
-                pages[0].subObjects.Add(colorConfigButton);
+                pages[_currentPage].subObjects.Add(colorConfigButton);
                 //MutualHorizontalButtonBind(colorConfigButton, slugcatButtons.meButton.usernameButton);
             }
         }
@@ -432,7 +432,7 @@ namespace RainMeadow
             float restartTextWidth = GetRestartTextWidth(base.CurrLang);
             float restartTextOffset = GetRestartTextOffset(base.CurrLang);
 
-            Vector2 pos = new(20, 520);
+            Vector2 pos = new(leftAnchor + 20, 520);
 
             isPupCheckbox = new CheckBox(this, pages[_currentPage], this, pos + new Vector2(restartTextWidth, 70), restartTextWidth, Translate("Slugpup"), "SLUGPUP");
             isPupCheckbox.label.pos.x += restartTextWidth - isPupCheckbox.label.label.textRect.width - 5f;

@@ -23,11 +23,11 @@ namespace RainMeadow
             if(chatMenuBox is not null)
                 ChatLogManager.MessageLogged -= chatMenuBox.OnMessageLogged;
 
-            pages[_currentPage].ClearMenuObject(ref this.chatMenuBox);
+            pages[currentPage].ClearMenuObject(ref this.chatMenuBox);
 
             if (this.isChatToggled && this.chatMenuBox is null)
             {
-                this.chatMenuBox = new ChatMenuBox(this, pages[_currentPage], new Vector2(this.chatTextBoxPos.x + 24, 0), new(280, 300));
+                this.chatMenuBox = new ChatMenuBox(this, pages[_currentPage], new Vector2(this.chatTextBoxPos.x + 24, 0), new(320, 300));
                 ChatLogManager.MessageLogged += chatMenuBox.OnMessageLogged;
                 
                 pages[_currentPage].subObjects.Add(this.chatMenuBox);
