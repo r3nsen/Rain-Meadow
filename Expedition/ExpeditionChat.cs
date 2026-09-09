@@ -9,7 +9,6 @@ using UnityEngine;
 
 namespace RainMeadow
 {
-    // basically copied from story menu chat
     public partial class ExpeditionOnlineMenu : ExpeditionMenu
     {        
         private int currentLogIndex = 0;
@@ -20,9 +19,11 @@ namespace RainMeadow
 
         internal void ResetChatInput()
         {
-            if(chatMenuBox is not null)
+            if (chatMenuBox is not null)
+            {
+                chatMenuBox.chatTypingBox.DelayedUnload(.1f);
                 ChatLogManager.MessageLogged -= chatMenuBox.OnMessageLogged;
-
+            }
             pages[currentPage].ClearMenuObject(ref this.chatMenuBox);
 
             if (this.isChatToggled && this.chatMenuBox is null)
