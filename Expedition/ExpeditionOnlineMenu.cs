@@ -272,6 +272,7 @@ namespace RainMeadow
         {
             if (expeditionGameMode.currentCampaign == campaign && /*expeditionGameMode.menuSaveState != null && */firstTimeCampaingSet) return;
             expeditionGameMode.currentCampaign = campaign;
+            RainMeadow.Debug($"{campaign} selected");
             if(!manager.rainWorld.progression.loadInProgress)
                 firstTimeCampaingSet = true;
 

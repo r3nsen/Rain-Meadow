@@ -457,13 +457,20 @@ namespace RainMeadow
 
         private void HuntChallenge_CreatureKilled(On.Expedition.HuntChallenge.orig_CreatureKilled orig, Expedition.HuntChallenge self, Creature crit, int playerNumber)
         {
-            if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
+            if (OnlineManager.lobby is not null)
             {
                 if (self.completed || self.game == null || crit == null) return;
                 if (crit.abstractCreature.GetOnlineCreature() is not OnlineCreature onlineCrit) return;
                 if (!onlineCrit.isMine) return;
 
                 RainMeadow.Info($"creature: {onlineCrit}, killer: {crit.abstractCreature.realizedCreature.killTag}, owner: {onlineCrit.owner}");
+
+                if (OnlineManager.lobby.isOwner)
+                {
+                    RainMeadow.Info("HuntChallenge - Player " + (OnlineManager.lobby.owner).ToString() + " killed " + onlineCrit);
+                    orig(self, crit, playerNumber);
+                    return;
+                }
 
                 getChallengeID(self, out var id);
 
@@ -479,13 +486,20 @@ namespace RainMeadow
 
         private void GlobalScoreChallenge_CreatureKilled(On.Expedition.GlobalScoreChallenge.orig_CreatureKilled orig, Expedition.GlobalScoreChallenge self, Creature crit, int playerNumber)
         {
-            if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
+            if (OnlineManager.lobby is not null)
             {
                 if (self.completed || self.game == null || crit == null) return;
                 if (crit.abstractCreature.GetOnlineCreature() is not OnlineCreature onlineCrit) return;
                 if (!onlineCrit.isMine) return;
 
                 RainMeadow.Info($"creature: {onlineCrit}, killer: {crit.abstractCreature.realizedCreature.killTag}, owner: {onlineCrit.owner}");
+
+                if (OnlineManager.lobby.isOwner)
+                {
+                    RainMeadow.Info("GlobalScroeChallenge - Player " + (OnlineManager.lobby.owner).ToString() + " killed " + onlineCrit);
+                    orig(self, crit, playerNumber);
+                    return;
+                }
 
                 getChallengeID(self, out var id);
                 CreatureTemplate.Type type = crit.abstractCreature.creatureTemplate.type;
@@ -501,13 +515,20 @@ namespace RainMeadow
 
         private void CycleScoreChallenge_CreatureKilled(On.Expedition.CycleScoreChallenge.orig_CreatureKilled orig, Expedition.CycleScoreChallenge self, Creature crit, int playerNumber)
         {
-            if (OnlineManager.lobby is not null && !OnlineManager.lobby.isOwner)
+            if (OnlineManager.lobby is not null)
             {
                 if (self.completed || self.game == null || crit == null) return;
                 if (crit.abstractCreature.GetOnlineCreature() is not OnlineCreature onlineCrit) return;
                 if (!onlineCrit.isMine) return;
 
                 RainMeadow.Info($"creature: {onlineCrit}, killer: {crit.abstractCreature.realizedCreature.killTag}, owner: {onlineCrit.owner}");
+
+                if (OnlineManager.lobby.isOwner)
+                {
+                    RainMeadow.Info("CycleScoreChallenge - Player " + (OnlineManager.lobby.owner).ToString() + " killed " + onlineCrit);
+                    orig(self, crit, playerNumber);
+                    return;
+                }
 
                 getChallengeID(self, out var id);
                 CreatureTemplate.Type type = crit.abstractCreature.creatureTemplate.type;
