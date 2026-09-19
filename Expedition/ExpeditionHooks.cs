@@ -47,6 +47,30 @@ namespace RainMeadow
             On.Expedition.ExpeditionCoreFile.FromString += ExpeditionCoreFile_FromString;
             On.Expedition.ExpeditionCoreFile.ToString += ExpeditionCoreFile_ToString1;
             On.Expedition.ExpeditionProgression.CheckUnlocked += ExpeditionProgression_CheckUnlocked;
+            On.Expedition.CycleScoreChallenge.ToString += CycleScoreChallenge_ToString;
+        }
+
+        private string CycleScoreChallenge_ToString(On.Expedition.CycleScoreChallenge.orig_ToString orig, CycleScoreChallenge self)
+        {
+            if (isExpeditionMode(out _))
+            {
+                return string.Concat(new string[]
+                {
+                    "CycleScoreChallenge",
+                    "~",
+                    global::Menu.Remix.ValueConverter.ConvertToString<int>(self.score),
+                    "><",
+                    global::Menu.Remix.ValueConverter.ConvertToString<int>(self.target),
+                    "><",
+                    self.completed ? "1" : "0",
+                    "><",
+                    self.hidden ? "1" : "0",
+                    "><",
+                    self.revealed ? "1" : "0"
+                });
+            }
+
+            return orig(self);
         }
 
         private bool ExpeditionProgression_CheckUnlocked(On.Expedition.ExpeditionProgression.orig_CheckUnlocked orig, ProcessManager manager, SlugcatStats.Name slugcat)
