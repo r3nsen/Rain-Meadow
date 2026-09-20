@@ -29,7 +29,7 @@ namespace RainMeadow
         {
             get
             {
-                return playerSelectedSlugcats?[0] ?? ExpeditionGame.playableCharacters[currentSelection];//slugcatColorOrder[slugcatPageIndex];
+                return playerSelectedSlugcats?[0] ?? ExpeditionGame.playableCharacters[currentSelection];
             }
             set
             {
@@ -39,37 +39,27 @@ namespace RainMeadow
         //public List<SlugcatStats.Name> playableCharacters
 
         SimplerSymbolButton toggleChat;
-        //
-        private ButtonScroller? playerScrollBox;
-        private Vector2 playerScrollBoxPos;
+        
         public static int MaxVisibleOnList => 8 - 3;
         public static float ButtonSpacingOffset => 8;
         public static float ButtonSizeWithSpacing => ButtonSize + ButtonSpacingOffset;
         public static float ButtonSize => 30;
-        int _currentPage = 1;
-        //
 
+        private ButtonScroller? playerScrollBox;
+        private Vector2 playerScrollBoxPos;
+        private int _currentPage = 1;
+        
         private StoryMenuSlugcatSelector? slugcatSelector;
 
         private Vector2 lobbylabelPos;
-        // private ChatTextBox chatTextBox;
         private ChatMenuBox chatMenuBox;
         private Vector2 chatTextBoxPos;
 
-        ScrollSymbolButton colorConfigButton;
+        private ScrollSymbolButton colorConfigButton;
         private Dialog colorConfigDialog;
-        // CheckBox customColorsCheckbox;
-        CheckBox isPupCheckbox;
-        
+        private CheckBox isPupCheckbox;
 
-        bool _pagesMoving;
-
-        private Vector2[] bodyButtonsPos;
-        private Vector2[] bodyButtonsLastPos;
-        private Vector2[] bodyColorBordersPos;
-        private Vector2[] bodyColorBordersLastPos;
-        private Vector2[] bodyColorsPos;
-        private Vector2[] bodyColorsLastPos;
+        private bool _pagesMoving;
 
         void SetupOnlineMenuItens()
         {
@@ -93,16 +83,6 @@ namespace RainMeadow
             SetupCheckbox();
         }
 
-        // update()
-        //  - float num5 = ((this.manager.rainWorld.options.ScreenSize.x != 1024f) ? 695f : 728f);
-        //  - this.manualButton.pos = new global::UnityEngine.Vector2(this.rightAnchor - (this.leftAnchor + 150f), num5) - this.manualButton.page.pos;
-        //  - this.manualButton.lastPos = new global::UnityEngine.Vector2(this.rightAnchor - (this.leftAnchor + 150f), num5) - this.manualButton.page.lastPos;
-
-        // updatePage()
-        //  - this.manualButton.RemoveSprites();
-        //  - this.manualButton.RemoveSubObject(this.manualButton);
-        //  - this.manualButton = new global::Menu.SimpleButton(this, this.pages[this.currentPage], base.Translate("MANUAL"), "MANUAL", new global::UnityEngine.Vector2(this.rightAnchor - 150f, 695f), new global::UnityEngine.Vector2(100f, 30f));
-
         private void UpdatePlayerList()
         {
             playerScrollBox?.RemoveAllButtons(false);
@@ -118,7 +98,6 @@ namespace RainMeadow
                 playerScrollBox.AddScrollObjects(playerButton);
             }
             playerScrollBox.ConstrainScroll();
-
         }
 
         private void OnlineManager_OnPlayerListReceived(PlayerInfo[] players)
@@ -128,6 +107,7 @@ namespace RainMeadow
                 UpdatePlayerList();
             }
         }
+  
         float offscreen = 0;
         private void UpdateUI()
         {
@@ -135,15 +115,13 @@ namespace RainMeadow
             {
                 int usePagePos = (pagesMoving || !_pagesMoving) ? 1 : 0;
 
-                float offset = 0;// 2.9f;
-
                 if (_currentPage == 3) offscreen = Mathf.Lerp(offscreen, 1, .06f);
                 else offscreen = Mathf.Lerp(offscreen, 0, .2f);
 
                 Mathf.Clamp(offscreen, 0f, 1f);
 
-                Vector2 pagePos = new Vector2(pages[_currentPage].pos.x + leftAnchor + offset, 0) * usePagePos;
-                Vector2 pageLastPos = new Vector2(pages[_currentPage].lastPos.x + leftAnchor + offset, 0) * usePagePos;
+                Vector2 pagePos = new Vector2(pages[_currentPage].pos.x + leftAnchor, 0) * usePagePos;
+                Vector2 pageLastPos = new Vector2(pages[_currentPage].lastPos.x + leftAnchor, 0) * usePagePos;
 
                 Vector2 makeOffscreen = new Vector2(300, 0) * offscreen;
 
@@ -152,9 +130,6 @@ namespace RainMeadow
 
                 chatMenuBox?.pos = chatTextBoxPos + new Vector2(24, 0) - pagePos;
                 chatMenuBox?.lastPos = chatTextBoxPos + new Vector2(24, 0) - pageLastPos;
-
-                //chatMenuBox?.roundedRect.pos = new Vector2(24 + 4.4f, 0) - pagePos;
-                //chatMenuBox?.roundedRect.lastPos = new Vector2(24 + 4.4f, 0) - pageLastPos;
 
                 toggleChat.pos = chatTextBoxPos - pagePos;
                 toggleChat.lastPos = chatTextBoxPos - pageLastPos;
@@ -170,42 +145,22 @@ namespace RainMeadow
                 slugcatSelector.pos = slugcatSelectorpos - pagePos - makeOffscreen;
                 slugcatSelector.lastPos = slugcatSelectorpos - pageLastPos - makeOffscreen;
 
-
                 float restartTextWidth = GetRestartTextWidth(base.CurrLang);
-                //float restartTextOffset = GetRestartTextOffset(base.CurrLang);
-
+                
                 Vector2 pos = new(leftAnchor + 60 + restartTextWidth, 550 + 40);
 
                 colorConfigButton.pos = pos - pagePos - makeOffscreen;
                 colorConfigButton.lastPos = pos - pageLastPos - makeOffscreen;
-                //customColorsCheckbox.pos = pos - pagePos;
-                //customColorsCheckbox.lastPos = pos - pageLastPos;
-
+                
                 pos = new(leftAnchor + 20 + restartTextWidth, 520 + 70);
 
                 isPupCheckbox.pos = pos - pagePos - makeOffscreen;
                 isPupCheckbox.lastPos = pos - pageLastPos - makeOffscreen;
 
-                // why...
-                //if (colorInterface != null)
-                //{
-                //    for (int i = 0; i < colorInterface.bodyColors.Length; i++)
-                //    {
-                //        colorInterface.bodyButtons[i].pos = bodyButtonsPos[i] - pagePos;
-                //        colorInterface.bodyButtons[i].lastPos = bodyButtonsLastPos[i] - pageLastPos;
-                //        colorInterface.bodyColorBorders[i].pos = bodyColorBordersPos[i] - pagePos;
-                //        colorInterface.bodyColorBorders[i].lastPos = bodyColorBordersLastPos[i] - pageLastPos;
-                //        colorInterface.bodyColors[i].pos = bodyColorsPos[i] - pagePos;
-                //        colorInterface.bodyColors[i].lastPos = bodyColorsLastPos[i] - pageLastPos;
-                //    }
-                //}
                 _pagesMoving = pagesMoving;
-            }
-            //else
-            //{
-            //    offscreen = (_currentPage == 3 ? 1 : 0);
-            //}
+            }            
         }
+    
         void UpdateOnlinePage(int pageIndex)
         {
             _currentPage = pageIndex;
@@ -217,30 +172,16 @@ namespace RainMeadow
             playerScrollBox?.RemoveAllButtons(false);
             pages[currentPage].ClearMenuObject(ref playerScrollBox);
 
-            //this.chatMenuBox?.DelayedUnload(0.1f);
-            //pages[currentPage].ClearMenuObject(ref chatMenuBox);
-
-            // pages[currentPage].ClearMenuObject(ref customColorsCheckbox);
             pages[currentPage].ClearMenuObject(ref colorConfigButton);            
             pages[currentPage].ClearMenuObject(ref isPupCheckbox);
             
-
-            //RemoveColorInterface();
             RemoveSlugcatList();
-
-
-           // RemoveColorButtons();
-
-            //if (colorChecked)
-            //    AddColorButtons();
 
             SetupSlugcatList();
 
             SetupOnlineMenuItens();
             UpdatePlayerList();
             ResetChatInput();
-
-            //AddColorInterface();
         }
 
         // custom scugs
@@ -255,7 +196,6 @@ namespace RainMeadow
             }
             if (slugcatSelector == null)
             {
-                //first player button is 30 pos below size of list. and list top part is 30 below the title. Plus
                 slugcatSelector = new(this, pages[_currentPage], new(pos.x, pos.y - (ButtonSize * 2)), MaxVisibleOnList, ButtonSpacingOffset, PlayerSelectedSlugcat, GetSlugcatSelectionButtons);
                 pages[_currentPage].subObjects.Add(slugcatSelector);
             }
@@ -300,7 +240,7 @@ namespace RainMeadow
 
         public void SetSelectedSlugcat(int player, SlugcatStats.Name slugcat)
         {
-            if ((playerSelectedSlugcats[player] != slugcat && playerSelectedSlugcats[player] != null) || (playerSelectedSlugcats[player] == null && ExpeditionGame.playableCharacters[currentSelection] != slugcat))//slugcatColorOrder[slugcatPageIndex] != slugcat))
+            if ((playerSelectedSlugcats[player] != slugcat && playerSelectedSlugcats[player] != null) || (playerSelectedSlugcats[player] == null && ExpeditionGame.playableCharacters[currentSelection] != slugcat))
             {
                 if (ModManager.JollyCoop)
                 {
@@ -308,17 +248,6 @@ namespace RainMeadow
                 }
                 playerSelectedSlugcats[player] = slugcat == ExpeditionGame.playableCharacters[currentSelection] ? null : slugcat; // slugcatColorOrder[slugcatPageIndex] ? null : slugcat;
                 expeditionGameMode.preferredSlug = slugcat;
-
-                if (player == 0)
-                {
-                    //if (colorInterface is not null)
-                    //{
-                    //    //RemoveColorButtons();
-                    //    //AddColorButtons();
-                    //}
-                }
-                
-                // SetChecked(customColorsCheckbox, manager.rainWorld.progression.miscProgressionData.colorsEnabled.ContainsKey(PlayerSelectedSlugcat.value) && manager.rainWorld.progression.miscProgressionData.colorsEnabled[PlayerSelectedSlugcat.value]);
             }
         }
 
@@ -339,21 +268,6 @@ namespace RainMeadow
             }
             return [.. slugcatButtons];
         }
-
-        //public CustomColorInterface GetColorInterfaceForSlugcat(SlugcatStats.Name slugcatID, Vector2 pos)
-        //{
-        //    List<string> names = PlayerGraphics.ColoredBodyPartList(slugcatID);
-        //    List<string> list = PlayerGraphics.DefaultBodyPartColorHex(slugcatID);
-        //    for (int i = 0; i < list.Count; i++)
-        //    {
-        //        Vector3 vector = RWCustom.Custom.RGB2HSL(RWCustom.Custom.hexToColor(list[i]));
-        //        list[i] = vector[0].ToString(CultureInfo.InvariantCulture) + "," + vector[1].ToString(CultureInfo.InvariantCulture) + "," + vector[2].ToString(CultureInfo.InvariantCulture);
-        //    }
-
-        //    //RainMeadow.Debug($"this: {this}, pages[{_currentPage}]: {pages[_currentPage]}, pos: {pos}, slugcatID: {slugcatID}, names: {names}, list: {list}");
-        //    return new CustomColorInterface(this, pages[_currentPage], pos, slugcatID, names, list);
-        //}
-
     }
     public partial class ExpeditionOnlineMenu : CheckBox.IOwnCheckBox
     {
@@ -371,38 +285,16 @@ namespace RainMeadow
         private bool slugpupChecked;
 
         public void SetupColorMenu()
-        {
-            //if (ModManager.MMF)
-            //{
-            //    float restartTextWidth = GetRestartTextWidth(base.CurrLang);
-            //    float restartTextOffset = GetRestartTextOffset(base.CurrLang);
-
-            //    Vector2 pos = new(70, 550);
-
-            //    customColorsCheckbox = new CheckBox(this, pages[_currentPage], this, pos + new Vector2(restartTextWidth, 70), restartTextWidth, Translate("Custom colors"), "COLORS");
-            //    customColorsCheckbox.label.pos.x += restartTextWidth - customColorsCheckbox.label.label.textRect.width - 5f;
-            //    customColorsCheckbox.selectable = true;
-            //    pages[_currentPage].subObjects.Add(customColorsCheckbox);
-            //}
-
+        {            
             if (ModManager.MMF)
             {
                 Vector2 pos = new(leftAnchor + 60, 550);
 
                 float restartTextWidth = GetRestartTextWidth(base.CurrLang);
-                //colorConfigButton = new(this, pages[_currentPage], "Kill_Slugcat", "", pos + new Vector2(restartTextWidth, 70));
                 Futile.atlasManager.LogAllElementNames();
                 colorConfigButton = new(this, pages[_currentPage], "Meadow_Menu_BigColorBucket", "COLOR_SLUGCAT", pos + new Vector2(restartTextWidth, 40), new(45, 45));
-                //colorConfigButton.OnClick += (_) =>
-                //{
-
-                //    //if (playerSelectedSlugcats[0] == null) return;
-                //    //colorConfigDialog = new ColorMultipleSlugcatsDialog(manager playerSelectedSlugcats[0], () => { });
-                //    //manager.ShowDialog(colorConfigDialog);
-                //    OpenColorConfig(playerSelectedSlugcats[0]);
-                //};
-                pages[_currentPage].subObjects.Add(colorConfigButton);
-                //MutualHorizontalButtonBind(colorConfigButton, slugcatButtons.meButton.usernameButton);
+               
+                pages[_currentPage].subObjects.Add(colorConfigButton);               
             }
         }
 
@@ -414,8 +306,7 @@ namespace RainMeadow
                 colorConfigDialog = new DialogNotify(
                     this.LongTranslate("You cant color without Remix on!"),
                     new Vector2(500f, 200f),
-                    manager,
-                    () =>
+                    manager, () =>
                     {
                         PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
                     }
@@ -426,8 +317,7 @@ namespace RainMeadow
 
             PlaySound(SoundID.MENU_Checkbox_Check);
             colorConfigDialog = new ColorMultipleSlugcatsDialog(
-                manager,
-                () =>
+                manager, () =>
                 {
                     PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
                 },
@@ -451,146 +341,6 @@ namespace RainMeadow
             pages[_currentPage].subObjects.Add(isPupCheckbox);
         }
 
-        //public void AddColorButtons()
-        //{
-        //    if (colorInterface == null)
-        //    {
-        //        float w = ButtonScroller.CalculateHeightBasedOnAmtOfButtons(MaxVisibleOnList + 2, ButtonSize, ButtonSpacingOffset);
-        //        Vector2 vector = new(70, 553 - w - 15);
-        //        RainMeadow.Debug($"PlayerSelectedSlugcat: {PlayerSelectedSlugcat}");
-        //        colorInterface = GetColorInterfaceForSlugcat(pos: vector, slugcatID: PlayerSelectedSlugcat);
-        //        pages[_currentPage].subObjects.Add(colorInterface);
-
-        //        // why...
-        //        if (bodyButtonsPos == null)
-        //        {
-        //            int len = colorInterface.bodyColors.Length;
-        //            bodyButtonsPos = new Vector2[len];
-        //            bodyButtonsLastPos = new Vector2[len];
-        //            bodyColorBordersPos = new Vector2[len];
-        //            bodyColorBordersLastPos = new Vector2[len];
-        //            bodyColorsPos = new Vector2[len];
-        //            bodyColorsLastPos = new Vector2[len];
-
-        //            for (int i = 0; i < colorInterface.bodyColors.Length; i++)
-        //            {
-        //                bodyButtonsPos[i] = colorInterface.bodyButtons[i].pos;
-        //                bodyButtonsLastPos[i] = colorInterface.bodyButtons[i].lastPos;
-        //                bodyColorBordersPos[i] = colorInterface.bodyColorBorders[i].pos;
-        //                bodyColorBordersLastPos[i] = colorInterface.bodyColorBorders[i].lastPos;
-        //                bodyColorsPos[i] = colorInterface.bodyColors[i].pos;
-        //                bodyColorsLastPos[i] = colorInterface.bodyColors[i].lastPos;
-        //            }
-        //        }
-        //    }
-        //}
-
-        //public void RemoveColorButtons()
-        //{
-        //    if (colorInterface != null)
-        //    {
-        //        colorInterface.RemoveSprites();
-        //        pages[currentPage].RemoveSubObject(colorInterface);
-        //        colorInterface = null;
-
-        //        bodyButtonsPos = null;
-        //        bodyButtonsLastPos = null;
-        //        bodyColorBordersPos = null;
-        //        bodyColorBordersLastPos = null;
-        //        bodyColorsPos = null;
-        //        bodyColorsLastPos = null;
-        //    }
-
-        //    RemoveColorInterface();
-        //}
-
-        //public void RemoveColorInterface()
-        //{
-        //    if (hueSlider != null)
-        //    {
-        //        pages[currentPage].RemoveSubObject(hueSlider);
-        //        hueSlider.RemoveSprites();
-        //        hueSlider = null;
-        //    }
-
-        //    if (satSlider != null)
-        //    {
-        //        pages[currentPage].RemoveSubObject(satSlider);
-        //        satSlider.RemoveSprites();
-        //        satSlider = null;
-        //    }
-
-        //    if (litSlider != null)
-        //    {
-        //        pages[currentPage].RemoveSubObject(litSlider);
-        //        litSlider.RemoveSprites();
-        //        litSlider = null;
-        //    }
-
-        //    if (defaultColorButton != null)
-        //    {
-        //        pages[currentPage].RemoveSubObject(defaultColorButton);
-        //        defaultColorButton.RemoveSprites();
-        //        defaultColorButton = null;
-        //    }
-
-        //    activeColorChooser = -1;
-        //}
-
-        //public void AddColorInterface()
-        //{
-        //    float w = ButtonScroller.CalculateHeightBasedOnAmtOfButtons(MaxVisibleOnList + 3, ButtonSize, ButtonSpacingOffset);
-        //    Vector2 vector = new(70, 553 - w);
-        //    if (ModManager.JollyCoop)
-        //    {
-        //        vector[1] -= 40f;
-        //    }
-
-        //    if (colorInterface != null)
-        //    {
-        //        vector[1] -= (float)colorInterface.bodyColors.Length * 40f;
-        //    }
-
-        //    if (hueSlider == null)
-        //    {
-        //        hueSlider = new HorizontalSlider(this, pages[_currentPage], Translate("HUE"), vector, new Vector2(200f, 30f), MMFEnums.SliderID.Hue, subtleSlider: false);
-        //        pages[_currentPage].subObjects.Add(hueSlider);
-        //    }
-
-        //    if (satSlider == null)
-        //    {
-        //        satSlider = new HorizontalSlider(this, pages[_currentPage], Translate("SAT"), vector + new Vector2(0f, -40f), new Vector2(200f, 30f), MMFEnums.SliderID.Saturation, subtleSlider: false);
-        //        pages[_currentPage].subObjects.Add(satSlider);
-        //    }
-
-        //    if (litSlider == null)
-        //    {
-        //        litSlider = new HorizontalSlider(this, pages[_currentPage], Translate("LIT"), vector + new Vector2(0f, -80f), new Vector2(200f, 30f), MMFEnums.SliderID.Lightness, subtleSlider: false);
-        //        pages[_currentPage].subObjects.Add(litSlider);
-        //    }
-
-        //    float x = 110f;
-        //    if (base.CurrLang == InGameTranslator.LanguageID.Japanese || base.CurrLang == InGameTranslator.LanguageID.French)
-        //    {
-        //        x = 140f;
-        //    }
-        //    else if (base.CurrLang == InGameTranslator.LanguageID.Italian || base.CurrLang == InGameTranslator.LanguageID.Spanish)
-        //    {
-        //        x = 180f;
-        //    }
-
-        //    if (defaultColorButton == null)
-        //    {
-        //        defaultColorButton = new SimpleButton(this, pages[_currentPage], Translate("Restore Default"), "DEFAULTCOL", vector + new Vector2(0f, -120f), new Vector2(x, 30f));
-        //        pages[_currentPage].subObjects.Add(defaultColorButton);
-        //    }
-
-        //    MutualVerticalButtonBind(hueSlider, colorInterface.bodyButtons[colorInterface.bodyButtons.Length - 1]);
-        //    MutualVerticalButtonBind(satSlider, hueSlider);
-        //    MutualVerticalButtonBind(litSlider, satSlider);
-        //    MutualVerticalButtonBind(defaultColorButton, litSlider);
-        //}
-
         public bool GetChecked(CheckBox box)
         {
             if (box.IDString == "COLORS")
@@ -609,23 +359,7 @@ namespace RainMeadow
         }
 
         public void SetChecked(CheckBox box, bool c)
-        {
-            //if (box.IDString == "COLORS")
-            //{
-            //    colorChecked = c;
-            //    if (colorChecked)// && !CheckJollyCoopAvailable(colorFromIndex(slugcatPageIndex)))
-            //    {
-            //        AddColorButtons();
-            //        manager.rainWorld.progression.miscProgressionData.colorsEnabled[PlayerSelectedSlugcat.value] = true;
-            //        ExpeditionOnlineCoreFIle.customColors = true;
-            //    }
-            //    else
-            //    {
-            //        RemoveColorButtons();
-            //        manager.rainWorld.progression.miscProgressionData.colorsEnabled[PlayerSelectedSlugcat.value] = false;
-            //        ExpeditionOnlineCoreFIle.customColors = false;
-            //    }
-            //}
+        {        
             if (box.IDString == "SLUGPUP")
             {
                 slugpupChecked = c;
@@ -641,137 +375,5 @@ namespace RainMeadow
                 }
             }
         }
-
-        public static float GetRestartTextWidth(InGameTranslator.LanguageID lang)
-        {
-            float result = 85f;
-            if (lang == InGameTranslator.LanguageID.Chinese || lang == InGameTranslator.LanguageID.TraditionalChinese)
-            {
-                result = 110f;
-            }
-            else if (lang == InGameTranslator.LanguageID.French || lang == InGameTranslator.LanguageID.German)
-            {
-                result = 155f;
-            }
-            else if (lang == InGameTranslator.LanguageID.Spanish || lang == InGameTranslator.LanguageID.Portuguese)
-            {
-                result = 140f;
-            }
-            else if (lang == InGameTranslator.LanguageID.Japanese)
-            {
-                result = 180f;
-            }
-
-            return result;
-        }
-
-        public static float GetRestartTextOffset(InGameTranslator.LanguageID lang)
-        {
-            float result = 0f;
-            if (lang == InGameTranslator.LanguageID.French)
-            {
-                result = 35f;
-            }
-            else if (lang == InGameTranslator.LanguageID.Japanese || lang == InGameTranslator.LanguageID.Italian || lang == InGameTranslator.LanguageID.Spanish || lang == InGameTranslator.LanguageID.Portuguese)
-            {
-                result = 25f;
-            }
-            else if (lang == InGameTranslator.LanguageID.German)
-            {
-                result = 50f;
-            }
-
-            return result;
-        }
-
-        //public override void SliderSetValue(Slider slider, float f)
-        //{
-        //    if (slider.ID == ExpeditionEnums.SliderID.ChallengeDifficulty)
-        //    {
-        //        base.SliderSetValue(slider, f);
-        //        return;
-        //    }
-
-        //    // slugcatSelectMenu SliderSetValue
-
-        //    SlugcatStats.Name name = PlayerSelectedSlugcat;
-        //    int num = activeColorChooser;
-        //    Vector3 vector = new Vector3(1f, 1f, 1f);
-        //    if (manager.rainWorld.progression.miscProgressionData.colorChoices[name.value][num].Contains(","))
-        //    {
-        //        string[] array = manager.rainWorld.progression.miscProgressionData.colorChoices[name.value][num].Split(',');
-        //        vector = new Vector3(float.Parse(array[0], NumberStyles.Any, CultureInfo.InvariantCulture), float.Parse(array[1], NumberStyles.Any, CultureInfo.InvariantCulture), float.Parse(array[2], NumberStyles.Any, CultureInfo.InvariantCulture));
-        //    }
-
-        //    if (slider.ID == MMFEnums.SliderID.Hue)
-        //    {
-        //        vector[0] = Mathf.Clamp(f, 0f, 0.99f);
-        //        manager.rainWorld.progression.miscProgressionData.colorChoices[name.value][num] = vector[0].ToString(CultureInfo.InvariantCulture) + "," + vector[1].ToString(CultureInfo.InvariantCulture) + "," + vector[2].ToString(CultureInfo.InvariantCulture);
-        //    }
-        //    else if (slider.ID == MMFEnums.SliderID.Saturation)
-        //    {
-        //        vector[1] = Mathf.Clamp(f, 0f, 1f);
-        //        RWCustom.Custom.colorToHex(RWCustom.Custom.HSL2RGB(vector[0], vector[1], vector[2]));
-        //        manager.rainWorld.progression.miscProgressionData.colorChoices[name.value][num] = vector[0].ToString(CultureInfo.InvariantCulture) + "," + vector[1].ToString(CultureInfo.InvariantCulture) + "," + vector[2].ToString(CultureInfo.InvariantCulture);
-        //    }
-        //    else if (slider.ID == MMFEnums.SliderID.Lightness)
-        //    {
-        //        vector[2] = Mathf.Clamp(f, 0.01f, 1f);
-        //        RWCustom.Custom.colorToHex(RWCustom.Custom.HSL2RGB(vector[0], vector[1], vector[2]));
-        //        manager.rainWorld.progression.miscProgressionData.colorChoices[name.value][num] = vector[0].ToString(CultureInfo.InvariantCulture) + "," + vector[1].ToString(CultureInfo.InvariantCulture) + "," + vector[2].ToString(CultureInfo.InvariantCulture);
-        //    }
-
-        //    if (colorInterface != null)
-        //    {
-        //        colorInterface.bodyColors[num].color = RWCustom.Custom.HSL2RGB(vector[0], vector[1], vector[2]);
-        //    }
-
-        //    selectedObject = slider;
-        //}
-
-        //public override float ValueOfSlider(Slider slider)
-        //{
-        //    try
-        //    {
-        //        if (slider.ID == ExpeditionEnums.SliderID.ChallengeDifficulty)
-        //        {
-        //            return ExpeditionData.challengeDifficulty;
-        //        }
-
-        //        SlugcatStats.Name name = PlayerSelectedSlugcat;
-        //        int index = activeColorChooser;
-        //        Vector3 vector = new Vector3(1f, 1f, 1f);
-        //        if (manager.rainWorld.progression.miscProgressionData.colorChoices[name.value][index].Contains(","))
-        //        {
-        //            string[] array = manager.rainWorld.progression.miscProgressionData.colorChoices[name.value][index].Split(',');
-        //            if (array.Length == 3)
-        //            {
-        //                vector = new Vector3(float.Parse(array[0], NumberStyles.Any, CultureInfo.InvariantCulture), float.Parse(array[1], NumberStyles.Any, CultureInfo.InvariantCulture), float.Parse(array[2], NumberStyles.Any, CultureInfo.InvariantCulture));
-        //            }
-        //        }
-
-        //        if (slider.ID == MMFEnums.SliderID.Hue)
-        //        {
-        //            return vector[0];
-        //        }
-
-        //        if (slider.ID == MMFEnums.SliderID.Saturation)
-        //        {
-        //            return vector[1];
-        //        }
-
-        //        if (slider.ID == MMFEnums.SliderID.Lightness)
-        //        {
-        //            return vector[2];
-        //        }
-
-        //        return 0f;
-        //    }
-        //    catch (System.Exception e)
-        //    {
-        //        RainMeadow.Error(e);
-        //        return 0f;
-        //    }
-        //}
     }
 }
