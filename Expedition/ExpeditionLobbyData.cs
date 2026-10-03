@@ -1,9 +1,7 @@
 ﻿using Expedition;
-using RainMeadow.Generics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 using static RainMeadow.OnlineResource;
 using static RainMeadow.StoryLobbyData;
@@ -133,13 +131,14 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
 
             if (currentGameState?.session is StoryGameSession storySession)
             {
-                currentMenuSaveState = new MenuSaveStateState(storySession.saveState);                
+                expeditionGameMode.menuSaveState = new MenuSaveStateState(storySession.saveState);
+                currentMenuSaveState = expeditionGameMode.menuSaveState;
                 hasSaveState = saveStateString != null;
             }
             else
             {
-                currentMenuSaveState = expeditionGameMode.menuSaveState;              
-                hasSaveState = expeditionGameMode.hasSaveState;                
+                currentMenuSaveState = expeditionGameMode.menuSaveState;
+                hasSaveState = expeditionGameMode.hasSaveState;
             }
 
             if (ExpeditionOnlineMenu.expeditionGameMode is not null)
@@ -237,7 +236,6 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
 
                 for (int i = 0; i < currentChallengeList.Length; i++)
                 {
-
                     if (challenge[i].GetType() != currentChallengeList[i].ChallengeType)
                     {
                         challenge[i] = currentChallengeList[i].GetChallenge;
@@ -254,9 +252,17 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
                         needUpdate = true;
                     }
 
-                    if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame rwg)
+                    if (needUpdate)
                     {
-                        challenge[i].game = rwg;
+                        //if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame rwg)
+                        //{
+                        //    challenge[i].game = rwg;
+                        //}
+                        if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is ExpeditionOnlineMenu eom)
+                        {
+                            eom.characterSelect.UpdateChallengePreview();
+                        }
+
                         bool newCompleteState = challenge[i].completed;
 
                         if (oldCompleteState != newCompleteState && newCompleteState)
@@ -266,7 +272,7 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
                             challenge[i].CompleteChallenge();
                         }
 
-                        if (needUpdate) challenge[i].UpdateDescription();
+                        challenge[i].UpdateDescription();
                     }
                 }
             }                

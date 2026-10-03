@@ -4,9 +4,6 @@ using Expedition;
 using System.Collections.Generic;
 using Steamworks;
 using System.Linq;
-using System.Globalization;
-
-using static Menu.SlugcatSelectMenu;
 
 namespace RainMeadow
 {
@@ -23,6 +20,9 @@ namespace RainMeadow
 
         private bool jollyStarted;
         private bool colorsChecked;
+
+        bool isCurrentCampaignInitiallyNull = false;
+
         public ExpeditionOnlineMenu(ProcessManager manager) : base(manager)
         {
             playerSelectedSlugcats = new SlugcatStats.Name[4];
@@ -108,6 +108,8 @@ namespace RainMeadow
                 SetCampaign(ExpeditionData.slugcatPlayer);
                 expeditionGameMode.slugcatCampaingSelected = currentSelection;
 
+                PreviewChallengesInMenu();
+
                 if (characterSelect != null)
                 {
                     characterSelect.abandonButton.bumpBehav.greyedOut = false;
@@ -177,12 +179,40 @@ namespace RainMeadow
 
             slugcatSelector.Slug = PlayerSelectedSlugcat;
 
-            //if (!colorsChecked && !manager.rainWorld.progression.loadInProgress)
-            //{
-            //    colorsChecked = true;
-            //    SetSelectedSlugcat(0, PlayerSelectedSlugcat);
-            //    //SetChecked(customColorsCheckbox, manager.rainWorld.progression.miscProgressionData.colorsEnabled.ContainsKey(PlayerSelectedSlugcat.value) && manager.rainWorld.progression.miscProgressionData.colorsEnabled[PlayerSelectedSlugcat.value]);
-            //}
+        }
+
+        private void PreviewChallengesInMenu()
+        {
+            if (isCurrentCampaignInitiallyNull)
+            {
+                if (currentPage != 1)
+                {
+                    if (expeditionGameMode.menuSaveState is null)
+                    {
+                        expeditionGameMode.menuSaveState = new StoryLobbyData.MenuSaveStateState()
+                        {
+                            karma = 1,
+                            rippleLevel = 0,
+                            food = 0,
+                            cycle = 0,
+                            karmaReinforced = false,
+                            hasGlow = false,
+                            hasMark = false,
+                            ascended = false,
+                            altEnd = false,
+                            shelterName = "",
+                            gameTimeAlive = 0,
+                            gameTimeDead = 0,
+                        };
+                        expeditionGameMode.hasSaveState = true;
+                    }
+                }
+                else
+                {
+                    expeditionGameMode.menuSaveState = null;
+                    expeditionGameMode.hasSaveState = false;
+                }
+            }
         }
 
         public void pre_start()
@@ -262,26 +292,30 @@ namespace RainMeadow
                 SteamMatchmaking.SetLobbyData(steamMatchmakingManager.lobbyID, MatchmakingManager.CAMPAIGN_KEY, expeditionGameMode.currentCampaign.value);
         }
 
-        public static Menu.SlugcatSelectMenu.SaveGameData getSaveState()
-        {
-            return expeditionGameMode.menuSaveGameData;
-        }
-
         bool firstTimeCampaingSet;
         public void SetCampaign(SlugcatStats.Name campaign)
         {
             if (expeditionGameMode.currentCampaign == campaign && /*expeditionGameMode.menuSaveState != null && */firstTimeCampaingSet) return;
-            expeditionGameMode.currentCampaign = campaign;
+            
+            expeditionGameMode.currentCampaign = campaign;            
             RainMeadow.Debug($"{campaign} selected");
-            if(!manager.rainWorld.progression.loadInProgress)
-                firstTimeCampaingSet = true;
 
-            SaveGameData sgd = MineForSaveData(RWCustom.Custom.rainWorld.processManager, campaign);
+            if(!manager.rainWorld.progression.loadInProgress) firstTimeCampaingSet = true;
 
+            var sgd = SlugcatSelectMenu.MineForSaveData(RWCustom.Custom.rainWorld.processManager, expeditionGameMode.currentCampaign);
+            
             if (sgd is not null)
+            {
                 expeditionGameMode.menuSaveState = new StoryLobbyData.MenuSaveStateState(sgd);
+                expeditionGameMode.hasSaveState = true;
+                isCurrentCampaignInitiallyNull = false;
+            }
             else
+            {
                 expeditionGameMode.menuSaveState = null;
+                expeditionGameMode.hasSaveState = false;
+                isCurrentCampaignInitiallyNull = true;
+            }
         }
 
         public override void ShutDownProcess()
@@ -310,20 +344,6 @@ namespace RainMeadow
                 return;
             }
            
-            //if (message == "DEFAULTCOL")
-            //{
-            //    SlugcatStats.Name name = PlayerSelectedSlugcat;
-            //    int index = activeColorChooser;
-            //    manager.rainWorld.progression.miscProgressionData.colorChoices[name.value][index] = colorInterface.defaultColors[activeColorChooser];
-            //    float f = ValueOfSlider(hueSlider);
-            //    float f2 = ValueOfSlider(satSlider);
-            //    float f3 = ValueOfSlider(litSlider);
-            //    SliderSetValue(hueSlider, f);
-            //    SliderSetValue(satSlider, f2);
-            //    SliderSetValue(litSlider, f3);
-            //    PlaySound(SoundID.MENU_Remove_Level);
-            //}
-
             base.Singal(sender, message);
 
             if (message == "COLOR_SLUGCAT")
