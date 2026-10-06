@@ -1,7 +1,14 @@
 # Release 1.16.0
 
+## Story
+- Fixed gates starting region transitions before all players are ready and closing the middle door before all players have crossed
+- Fixed client lobby menu UI crashing sometimes when changing from a campaign with a save to an empty campaign
+- fixed client lobby menu getting local save of the current campaign when host doesn't have a save on it
+- Joining a story lobby will now start directly at the current campaign instead of scrolling to it from survivor 
+
 ## Arena
 - Fixed infinite tinnitus again
+- Stopped self-destruct giving kill points (it will be treated as a suicide now)
 
 ## Chat
 

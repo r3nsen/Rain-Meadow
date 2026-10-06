@@ -171,14 +171,15 @@ namespace RainMeadow
 
             for (int i = arenaOnline.arenaSittingOnlineOrder.Count - 1; i >= 0; i--)
             {
-                OnlinePlayer? missingPlayer = ArenaHelpers.FindOnlinePlayerByLobbyId(
-                    arenaOnline.arenaSittingOnlineOrder[i]
-                );
-                if (missingPlayer == null)
+                ushort lobbyId = arenaOnline.arenaSittingOnlineOrder[i];
+                if (ArenaHelpers.FindOnlinePlayerByLobbyId(lobbyId) is null
+                    || arenaOnline.playersQuitMidRound.Contains(lobbyId))
                 {
                     arenaOnline.arenaSittingOnlineOrder.RemoveAt(i);
                 }
             }
+
+            arenaOnline.playersQuitMidRound.Clear();
 
             if (RoomSession.map.TryGetValue(abstractRoom, out var roomSession))
             {
@@ -250,7 +251,7 @@ namespace RainMeadow
                 [
                     .. OnlineManager.players.Where(x =>
                         ArenaHelpers.GetArenaClientSettings(x)?.ready == true && !x.isMe
-                    ),
+                    ).OrderBy(x => x.inLobbyId),
                 ];
 
                 self.players.Clear();
@@ -284,16 +285,22 @@ namespace RainMeadow
                     {
                         if (player != null) // always gotta check in case something happened to them
                         {
-                            if (
-                                !arenaOnline.arenaSittingOnlineOrder.Contains(player.inLobbyId)
-                                && OnlineManager.lobby.isOwner
-                            )
+                            int sittingIndex = arenaOnline.arenaSittingOnlineOrder.IndexOf(
+                                player.inLobbyId
+                            );
+                            if (sittingIndex < 0)
                             {
                                 arenaOnline.arenaSittingOnlineOrder.Add(player.inLobbyId);
+                                sittingIndex = arenaOnline.arenaSittingOnlineOrder.Count - 1;
                             }
-                            ArenaSitting.ArenaPlayer newArenaPlayer = new(
-                                arenaOnline.arenaSittingOnlineOrder.Count - 1
-                            )
+                            if (self.players.Any(p => p.playerNumber == sittingIndex))
+                            {
+                                RainMeadow.Error(
+                                    $"Arena: duplicate player number {sittingIndex} for {player}"
+                                );
+                                continue;
+                            }
+                            ArenaSitting.ArenaPlayer newArenaPlayer = new(sittingIndex)
                             {
                                 playerClass = ArenaHelpers
                                     .GetArenaClientSettings(player)!
@@ -395,6 +402,11 @@ namespace RainMeadow
             if (self.sessionEnded || ModManager.MSC && attacker.AI is not null)
                 return;
 
+            if (attacker == target)
+            {
+                RainMeadow.Debug("No points given on SD! Returning early.");
+                return;
+            }
             if (attacker.abstractCreature.GetOnlineCreature() is not OnlineCreature attackerOCreature)
             {
                 RainMeadow.Error("Unable to find attacker's online creature.");
@@ -436,7 +448,7 @@ namespace RainMeadow
 
             // Handle Score
             int scoreChange = 0;
-
+            
             if (targetOCreature.isAvatar)
             {
                 scoreChange = self.GameTypeSetup.KillScore;
@@ -1177,7 +1189,7 @@ namespace RainMeadow
                 return;
             }
 
-            if (self.killTag is null)
+            if (self.killTag is null || self.killTag == self.abstractCreature)
             {
                 int scoreChange = -arenaSitting.gameTypeSetup.EmptyDeathScore;
 
@@ -1235,32 +1247,44 @@ namespace RainMeadow
             }
 
             int activePlayerCountWithOverseers = arenaOnline
-                .arenaSittingOnlineOrder.Select(id => ArenaHelpers.FindOnlinePlayerByLobbyId(id)) // Get the player
+                .arenaSittingOnlineOrder.Where(id => !arenaOnline.playersQuitMidRound.Contains(id)) // Skip mid-round quitters, as sittingPlayerCount does
+                .Select(id => ArenaHelpers.FindOnlinePlayerByLobbyId(id)) // Get the player
                 .Where(player => player != null) // Ensure player exists
                 .Select(player => ArenaHelpers.GetArenaClientSettings(player)) // Get settings
                 .Where(settings => settings != null) // Ensure settings exist
                 .Count(settings =>
                     settings!.playingAs == RainMeadow.Ext_SlugcatStatsName.OnlineOverseerSpectator
                 );
+            if (arenaOnline.playersQuitMidRound.Count > 0)
+            {
+                self.Players.RemoveAll(ac =>
+                    ac?.GetOnlineCreature()?.owner is OnlinePlayer owner
+                    && arenaOnline.playersQuitMidRound.Contains(owner.inLobbyId)
+                );
+            }
+            int sittingPlayerCount = arenaOnline.arenaSittingOnlineOrder.Count(id =>
+                !arenaOnline.playersQuitMidRound.Contains(id)
+            );
             if (
                 self.Players.Count + activePlayerCountWithOverseers
-                != arenaOnline.arenaSittingOnlineOrder.Count
+                != sittingPlayerCount
             )
             {
                 RainMeadow.Trace(
-                    $"Arena: Abstract Creature count does not equal registered players in the online Sitting! AC Count: {self.Players.Count} | ArenaSittingOnline Count: {arenaOnline.arenaSittingOnlineOrder.Count}"
+                    $"Arena: Abstract Creature count does not equal registered players in the online Sitting! AC Count: {self.Players.Count} | ArenaSittingOnline Count: {sittingPlayerCount}"
                 );
 
-                var extraPlayers = self.Players.Skip(arenaOnline.arenaSittingOnlineOrder.Count).ToList();
+                var extraPlayers = self.Players.Skip(sittingPlayerCount).ToList();
 
                 self.Players.RemoveAll(p => extraPlayers.Contains(p));
 
-                foreach (
-                    var playerAvatar in OnlineManager.lobby.playerAvatars.Select(kv => kv.Value)
-                )
+                foreach (var avatarEntry in OnlineManager.lobby.playerAvatars)
                 {
+                    var playerAvatar = avatarEntry.Value;
                     if (playerAvatar.type == (byte)OnlineEntity.EntityId.IdType.none)
                         continue; // not in game
+                    if (arenaOnline.playersQuitMidRound.Contains(avatarEntry.Key.inLobbyId))
+                        continue; // avatar may linger a few frames after quit
                     if (
                         playerAvatar.FindEntity(true) is OnlinePhysicalObject opo
                         && opo.apo is AbstractCreature ac
@@ -1276,7 +1300,7 @@ namespace RainMeadow
             {
                 arenaOnline.playersEqualToOnlineSitting =
                     self.Players.Count + activePlayerCountWithOverseers
-                    == arenaOnline.arenaSittingOnlineOrder.Count;
+                    == sittingPlayerCount;
             }
 
             if (!self.sessionEnded)
