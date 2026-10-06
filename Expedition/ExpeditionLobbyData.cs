@@ -234,6 +234,8 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
                     ExpeditionOnlineMenu.challengeListStrings = new List<string>(challengeStrings);
                 }
 
+                bool needUpdateeChallengePreview = false;
+
                 for (int i = 0; i < currentChallengeList.Length; i++)
                 {
                     if (challenge[i].GetType() != currentChallengeList[i].ChallengeType)
@@ -250,31 +252,34 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
                     {
                         ExpeditionOnlineMenu.challengeListStrings[i] = challenge[i].ToString();
                         needUpdate = true;
+                        needUpdateeChallengePreview = true;
                     }
 
                     if (needUpdate)
                     {
+                        needUpdate = false;
                         //if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame rwg)
                         //{
                         //    challenge[i].game = rwg;
                         //}
-                        if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is ExpeditionOnlineMenu eom)
-                        {
-                            eom.characterSelect.UpdateChallengePreview();
-                        }
 
                         bool newCompleteState = challenge[i].completed;
 
                         if (oldCompleteState != newCompleteState && newCompleteState)
                         {
-                            needUpdate = false;
                             challenge[i].completed = oldCompleteState;
                             challenge[i].CompleteChallenge();
                         }
 
                         challenge[i].UpdateDescription();
+                        
                     }
                 }
+                if(needUpdateeChallengePreview)
+                    if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is ExpeditionOnlineMenu eom)
+                    {
+                        eom.characterSelect.UpdateChallengePreview();                        
+                    }
             }                
 
             if (expedition.menuSaveState != currentMenuSaveState)

@@ -20,6 +20,7 @@ public class GlobalScoreChallengeState : ChallengeState
         score = gsc.score;
         target = gsc.target;
     }
+
     public override void ReadTo(Challenge challenge)
     {
         base.ReadTo(challenge);

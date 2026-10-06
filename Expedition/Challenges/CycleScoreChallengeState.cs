@@ -28,6 +28,7 @@ public class CycleScoreChallengeState : ChallengeState
         csc.score = score;
         csc.target = target;
     }
+
     public override string ToString()
     {
         return $"{{{base.ToString()}: data - score: { score}, target: { target} }}";

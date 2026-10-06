@@ -57,16 +57,17 @@ namespace RainMeadow
                 return string.Concat(new string[]
                 {
                     "CycleScoreChallenge",
-                    "~",
-                    global::Menu.Remix.ValueConverter.ConvertToString<int>(self.score),
-                    "><",
-                    global::Menu.Remix.ValueConverter.ConvertToString<int>(self.target),
+                    "~",                    
+                    Menu.Remix.ValueConverter.ConvertToString<int>(self.target),
                     "><",
                     self.completed ? "1" : "0",
                     "><",
                     self.hidden ? "1" : "0",
                     "><",
-                    self.revealed ? "1" : "0"
+                    self.revealed ? "1" : "0",
+                    "><",
+                    Menu.Remix.ValueConverter.ConvertToString<int>(self.score)
+                    
                 });
             }
 
@@ -704,6 +705,7 @@ namespace RainMeadow
                 }
                 else
                 {
+                    return orig(self, saveStateNumber);
                     em.hasSaveState = orig(self, saveStateNumber);
                     return em.hasSaveState;
                 }
@@ -713,12 +715,16 @@ namespace RainMeadow
 
         private Menu.SlugcatSelectMenu.SaveGameData SlugcatSelectMenu_MineForSaveData(On.Menu.SlugcatSelectMenu.orig_MineForSaveData orig, ProcessManager manager, SlugcatStats.Name slugcat)
         {
-            if (!isExpeditionMode(out _)) return orig(manager, slugcat);
+            if (!isExpeditionMode(out var em)) return orig(manager, slugcat);
 
             if (OnlineManager.lobby != null && !OnlineManager.lobby.isOwner)
-                return ExpeditionOnlineMenu.getSaveState();
+                return em.menuSaveGameData;
 
-            return orig(manager, slugcat);
+            var sgd = orig(manager, slugcat);
+
+            //em.SetSaveData(sgd);
+
+            return sgd;
         }
 
         private string ExpeditionCoreFile_ExpeditionSaveFileName(On.Expedition.ExpeditionCoreFile.orig_ExpeditionSaveFileName orig, Expedition.ExpeditionCoreFile self)
