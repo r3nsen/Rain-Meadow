@@ -48,6 +48,89 @@ namespace RainMeadow
             On.Expedition.ExpeditionCoreFile.ToString += ExpeditionCoreFile_ToString1;
             On.Expedition.ExpeditionProgression.CheckUnlocked += ExpeditionProgression_CheckUnlocked;
             On.Expedition.CycleScoreChallenge.ToString += CycleScoreChallenge_ToString;
+
+            On.Menu.CharacterSelectPage.SetUpSelectables += CharacterSelectPage_SetUpSelectables;
+            On.Menu.CharacterSelectPage.Update += CharacterSelectPage_Update;
+            On.Menu.CharacterSelectPage.UpdateSelectedSlugcat += CharacterSelectPage_UpdateSelectedSlugcat;
+            On.Menu.ExpeditionMenu.CommunicateWithUpcomingProcess += ExpeditionMenu_CommunicateWithUpcomingProcess;
+            On.Menu.ExpeditionGameOver.Singal += ExpeditionGameOver_Singal;
+
+        }
+
+        private void ExpeditionGameOver_Singal(On.Menu.ExpeditionGameOver.orig_Singal orig, ExpeditionGameOver self, MenuObject sender, string message)
+        {
+            if (isExpeditionMode(out var expeditionGameMode)) {
+                if (message == "RETRY")
+                {
+                    if (ModManager.CoopAvailable)
+                    {
+                        for (int i = 1; i < expeditionGameMode.avatarCount; i++)
+                        {
+                            self.manager.rainWorld.ActivatePlayer(i);
+                        }
+                        for (int j = expeditionGameMode.avatarCount; j < 4; j++)
+                        {
+                            self.manager.rainWorld.DeactivatePlayer(j);
+                        }
+                    }
+                }
+             }
+            orig(self, sender, message);
+        }
+
+        private void ExpeditionMenu_CommunicateWithUpcomingProcess(On.Menu.ExpeditionMenu.orig_CommunicateWithUpcomingProcess orig, ExpeditionMenu self, MainLoopProcess nextProcess)
+        {
+            orig(self, nextProcess);
+            
+            if (self is ExpeditionOnlineMenu && ModManager.JollyCoop)
+            {
+                if (nextProcess is Menu.InputOptionsMenu inputOptions)
+                {
+                    inputOptions.fromJollyMenu = true;
+                    inputOptions.previousMenu = Ext_ProcessID.ExpeditionMenu;
+                    return;
+                }
+            }
+        }
+
+        private void CharacterSelectPage_UpdateSelectedSlugcat(On.Menu.CharacterSelectPage.orig_UpdateSelectedSlugcat orig, CharacterSelectPage self, int num)
+        {
+            if (ModManager.JollyCoop)
+            {
+                self.menu.manager.rainWorld.options.jollyPlayerOptionsArray[0].PlayerClass = Expedition.ExpeditionGame.playableCharacters[num];
+            }
+            orig(self, num);
+        }
+
+        private void CharacterSelectPage_Update(On.Menu.CharacterSelectPage.orig_Update orig, CharacterSelectPage self)
+        {
+            orig(self);
+
+            if (ModManager.JollyCoop)
+            {
+                self.jollyToggleConfigMenu.GetButtonBehavior.greyedOut = false;
+                self.jollyPlayerCountLabel.text = self.menu.Translate("Expedition-Players").Replace("<num_p>", Menu.Remix.ValueConverter.ConvertToString<int>(RWCustom.Custom.rainWorld.options.JollyPlayerCount));
+            }
+        }
+
+        private void CharacterSelectPage_SetUpSelectables(On.Menu.CharacterSelectPage.orig_SetUpSelectables orig, CharacterSelectPage self)
+        {
+            orig(self);
+
+            if (ModManager.JollyCoop)
+            {
+                self.jollyToggleConfigMenu.nextSelectable[1] = (self.menu as ExpeditionMenu).muteButton;
+                self.jollyToggleConfigMenu.nextSelectable[0] = (self.menu as ExpeditionMenu).muteButton;
+                self.jollyToggleConfigMenu.nextSelectable[2] =  self.slugcatButtons[0];
+                if (ModManager.MSC)
+                {
+                    self.jollyToggleConfigMenu.nextSelectable[3] = self.slugcatButtons[3];
+                }
+                else
+                {
+                    self.jollyToggleConfigMenu.nextSelectable[3] = self.confirmExpedition;
+                }
+            }
         }
 
         private string CycleScoreChallenge_ToString(On.Expedition.CycleScoreChallenge.orig_ToString orig, CycleScoreChallenge self)

@@ -167,18 +167,21 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
 
             if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame currentGameState)
             {
-                PlayerState ps = (PlayerState)currentGameState.Players[0].state; // TODO: add jolly support
-
-                int _food = food >> 2;
-                int _quarterfood = food & 3;
-
-                ps.foodInStomach = _food;
-                ps.quarterFoodPoints = _quarterfood;
-
-                if ((currentGameState?.Players[0].realizedCreature is Player player))
+                for (int i = 0; i < currentGameState.StoryPlayerCount; i++)
                 {
-                    player.mushroomCounter = mushroomCounter;
-                    player.AddFood(0);
+                    PlayerState ps = (PlayerState)currentGameState.Players[i].state;
+
+                    int _food = food >> 2;
+                    int _quarterfood = food & 3;
+
+                    ps.foodInStomach = _food;
+                    ps.quarterFoodPoints = _quarterfood;
+
+                    if ((currentGameState?.Players[i].realizedCreature is Player player))
+                    {
+                        player.mushroomCounter = mushroomCounter;
+                        player.AddFood(0);
+                    }
                 }
 
                 for (int i = 0; i < ExpeditionGame.unlockTrackers.Count; i++)

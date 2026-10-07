@@ -47,7 +47,7 @@ namespace RainMeadow
 
 
             // disabling jolly co-op code.
-            IL.Menu.CharacterSelectPage.ctor += SoftDisableJollyCoOP;
+            // IL.Menu.CharacterSelectPage.ctor += SoftDisableJollyCoOP;
             IL.Menu.CharacterSelectPage.SetUpSelectables += SoftDisableJollyCoOP;
             IL.Menu.CharacterSelectPage.Update += SoftDisableJollyCoOP;
             IL.Menu.CharacterSelectPage.UpdateSelectedSlugcat += SoftDisableJollyCoOP;
@@ -308,6 +308,30 @@ namespace RainMeadow
                                 self.SetPortraitsDirty();
                                 return;
                             }
+
+                            else if (self.menu.manager.currentMainLoop is ExpeditionOnlineMenu expedition_menu)
+                            {                                
+                                SlugcatStats.Name currentslugcat = expedition_menu.playerSelectedSlugcats[i] ?? story.currentCampaign;
+
+                                // int current_index = expedition_menu.SelectableSlugcats.IndexOf(currentslugcat);
+                                int current_index = -1;
+                                for (int j = 0; j < expedition_menu.SelectableSlugcats.Length; j++)
+                                {
+                                    if (expedition_menu.SelectableSlugcats[j] == story.currentCampaign) current_index = j;
+                                }
+                             
+                                int newcharacterindex = (current_index + 1) % expedition_menu.SelectableSlugcats.Length;                                
+                                expedition_menu.playerSelectedSlugcats[i] = expedition_menu.SelectableSlugcats[newcharacterindex];
+                                if (expedition_menu.playerSelectedSlugcats[i] == Expedition.ExpeditionData.slugcatPlayer)
+                                {
+                                    expedition_menu.playerSelectedSlugcats[i] = null;
+                                }
+
+                                self.JollyOptions(i).playerClass = expedition_menu.SelectableSlugcats[newcharacterindex];
+                                self.menu.PlaySound(SoundID.MENU_Error_Ping);
+                                self.SetPortraitsDirty();
+                                return;
+                            }
                         }
                     }
                 }
@@ -348,6 +372,25 @@ namespace RainMeadow
                     {
                         var currentslugcat = story_menu.playerSelectedSlugcats[i];
                         if (currentslugcat is null) currentslugcat = story.currentCampaign;
+                        self.JollyOptions(i).playerClass = currentslugcat;
+
+                        if (!ModManager.MSC)
+                        {
+                            self.slidingMenu.playerSelector[i].pupButton.buttonBehav.greyedOut = true;
+                            if (self.slidingMenu.playerSelector[i].pupButton.isToggled)
+                            {
+                                self.slidingMenu.playerSelector[i].pupButton.Toggle();
+                            }
+                        }
+                        else if (ModManager.MSC && currentslugcat == MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Slugpup)
+                        {
+                            self.slidingMenu.playerSelector[i].pupButton.buttonBehav.greyedOut = true;
+                        }
+                    }
+                    else if (self.manager.currentMainLoop is ExpeditionOnlineMenu expedition_menu)
+                    {
+                        SlugcatStats.Name currentslugcat = expedition_menu.playerSelectedSlugcats[i] ?? story.currentCampaign;
+                        
                         self.JollyOptions(i).playerClass = currentslugcat;
 
                         if (!ModManager.MSC)
@@ -537,6 +580,10 @@ namespace RainMeadow
                 if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is StoryOnlineMenu menu)
                 {
                     return menu.playerSelectedSlugcats?[playerNumber] ?? menu.slugcatColorOrder[menu.slugcatPageIndex];
+                }
+                else if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is ExpeditionOnlineMenu expmenu)
+                {
+                    return expmenu.playerSelectedSlugcats?[playerNumber] ?? Expedition.ExpeditionData.slugcatPlayer;
                 }
 
             }

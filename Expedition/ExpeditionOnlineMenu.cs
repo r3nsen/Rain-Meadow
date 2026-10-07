@@ -226,7 +226,8 @@ namespace RainMeadow
 
                 var expeditionGameMode = ExpeditionOnlineMenu.expeditionGameMode;
 
-                var jollyallowed = false;// ModManager.JollyCoop;// && base.CheckJollyCoopAvailable(slugcatColorOrder[slugcatPageIndex]);
+                var jollyallowed = ModManager.JollyCoop;
+                
                 expeditionGameMode.avatarCount = jollyallowed ? manager.rainWorld.options.JollyPlayerCount : 1;
                 if (jollyallowed) PlayerGraphics.PopulateJollyColorArray(PlayerSelectedSlugcat);
 
@@ -281,15 +282,28 @@ namespace RainMeadow
                         // expeditionGameMode.avatarSettings[i].fakePup = true;
                     }
                 }
-            }
 
-            if (colorConfigDialog != null)
-            {
-                manager.StopSideProcess(colorConfigDialog); //force getting rid of dialog
-            }
 
-            if (MatchmakingManager.currentInstance is SteamMatchmakingManager steamMatchmakingManager)
-                SteamMatchmaking.SetLobbyData(steamMatchmakingManager.lobbyID, MatchmakingManager.CAMPAIGN_KEY, expeditionGameMode.currentCampaign.value);
+                if (colorConfigDialog != null)
+                {
+                    manager.StopSideProcess(colorConfigDialog); //force getting rid of dialog
+                }
+
+                if (MatchmakingManager.currentInstance is SteamMatchmakingManager steamMatchmakingManager)
+                    SteamMatchmaking.SetLobbyData(steamMatchmakingManager.lobbyID, MatchmakingManager.CAMPAIGN_KEY, expeditionGameMode.currentCampaign.value);
+
+                if (ModManager.CoopAvailable)
+                {
+                    for (int i = 1; i < expeditionGameMode.avatarCount; i++)
+                    {
+                        manager.rainWorld.ActivatePlayer(i);
+                    }
+                    for (int j = expeditionGameMode.avatarCount; j < 4; j++)
+                    {
+                        manager.rainWorld.DeactivatePlayer(j);
+                    }
+                }
+            }
         }
 
         bool firstTimeCampaingSet;
@@ -302,7 +316,7 @@ namespace RainMeadow
 
             if(!manager.rainWorld.progression.loadInProgress) firstTimeCampaingSet = true;
 
-            var sgd = SlugcatSelectMenu.MineForSaveData(RWCustom.Custom.rainWorld.processManager, expeditionGameMode.currentCampaign);
+            SlugcatSelectMenu.SaveGameData sgd = SlugcatSelectMenu.MineForSaveData(RWCustom.Custom.rainWorld.processManager, expeditionGameMode.currentCampaign);
             
             if (sgd is not null)
             {
@@ -326,7 +340,7 @@ namespace RainMeadow
 
             RainMeadow.DebugMe();
             var up = manager.upcomingProcess;
-            if (up != ProcessManager.ProcessID.Game && up != RainMeadow.Ext_ProcessID.ExpeditionMenu && up != ExpeditionEnums.ProcessID.ExpeditionJukebox)
+            if (up != ProcessManager.ProcessID.Game && up != RainMeadow.Ext_ProcessID.ExpeditionMenu && up != ExpeditionEnums.ProcessID.ExpeditionJukebox && up != ProcessManager.ProcessID.InputOptions)
             {
                 OnlineManager.LeaveLobby();
             }
