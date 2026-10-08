@@ -9,7 +9,7 @@ namespace RainMeadow
 {
     public partial class ExpeditionOnlineMenu : ExpeditionMenu
     {
-        public static ExpeditionGameMode expeditionGameMode;
+        ExpeditionGameMode expeditionGameMode;
         public static List<string> activeUnlocks;
         public static List<string> challengeListStrings;
         public static ChallengeState[] currentChallengeList;
@@ -64,6 +64,7 @@ namespace RainMeadow
             ChatTextBox.OnShutDownRequest += ResetChatInput;
             
             SetChecked(isPupCheckbox, ExpeditionOnlineCoreFIle.isPup);
+
         }
 
         public override void Update()
@@ -130,6 +131,7 @@ namespace RainMeadow
 
             if (expeditionGameMode.needMenuSaveUpdate)
             {
+                expeditionGameMode.currentCampaign = ExpeditionData.slugcatPlayer;
                 characterSelect?.UpdateSelectedSlugcat((characterSelect.menu as ExpeditionMenu).currentSelection);
                 expeditionGameMode.needMenuSaveUpdate = false;
             }
@@ -221,10 +223,8 @@ namespace RainMeadow
             {
                 if (OnlineManager.lobby.isOwner)
                 {
-                    ExpeditionOnlineMenu.expeditionGameMode.currentCampaign = Expedition.ExpeditionData.slugcatPlayer;
+                    expeditionGameMode.currentCampaign = Expedition.ExpeditionData.slugcatPlayer;
                 }
-
-                var expeditionGameMode = ExpeditionOnlineMenu.expeditionGameMode;
 
                 var jollyallowed = ModManager.JollyCoop;
                 
@@ -309,12 +309,13 @@ namespace RainMeadow
         bool firstTimeCampaingSet;
         public void SetCampaign(SlugcatStats.Name campaign)
         {
-            if (expeditionGameMode.currentCampaign == campaign && /*expeditionGameMode.menuSaveState != null && */firstTimeCampaingSet) return;
-            
+            if (expeditionGameMode.currentCampaign == campaign && firstTimeCampaingSet) return;
+            if (manager.rainWorld.progression.loadInProgress) return;
+                
+            firstTimeCampaingSet = true;
+
             expeditionGameMode.currentCampaign = campaign;            
             RainMeadow.Debug($"{campaign} selected");
-
-            if(!manager.rainWorld.progression.loadInProgress) firstTimeCampaingSet = true;
 
             SlugcatSelectMenu.SaveGameData sgd = SlugcatSelectMenu.MineForSaveData(RWCustom.Custom.rainWorld.processManager, expeditionGameMode.currentCampaign);
             
@@ -330,6 +331,7 @@ namespace RainMeadow
                 expeditionGameMode.hasSaveState = false;
                 isCurrentCampaignInitiallyNull = true;
             }
+
         }
 
         public override void ShutDownProcess()

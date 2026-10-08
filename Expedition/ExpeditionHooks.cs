@@ -54,7 +54,6 @@ namespace RainMeadow
             On.Menu.CharacterSelectPage.UpdateSelectedSlugcat += CharacterSelectPage_UpdateSelectedSlugcat;
             On.Menu.ExpeditionMenu.CommunicateWithUpcomingProcess += ExpeditionMenu_CommunicateWithUpcomingProcess;
             On.Menu.ExpeditionGameOver.Singal += ExpeditionGameOver_Singal;
-
         }
 
         private void ExpeditionGameOver_Singal(On.Menu.ExpeditionGameOver.orig_Singal orig, ExpeditionGameOver self, MenuObject sender, string message)
@@ -82,7 +81,7 @@ namespace RainMeadow
         {
             orig(self, nextProcess);
             
-            if (self is ExpeditionOnlineMenu && ModManager.JollyCoop)
+            if (isExpeditionMode(out _) && ModManager.JollyCoop)
             {
                 if (nextProcess is Menu.InputOptionsMenu inputOptions)
                 {
@@ -95,7 +94,7 @@ namespace RainMeadow
 
         private void CharacterSelectPage_UpdateSelectedSlugcat(On.Menu.CharacterSelectPage.orig_UpdateSelectedSlugcat orig, CharacterSelectPage self, int num)
         {
-            if (ModManager.JollyCoop)
+            if (isExpeditionMode(out _) && ModManager.JollyCoop)
             {
                 self.menu.manager.rainWorld.options.jollyPlayerOptionsArray[0].PlayerClass = Expedition.ExpeditionGame.playableCharacters[num];
             }
@@ -106,7 +105,7 @@ namespace RainMeadow
         {
             orig(self);
 
-            if (ModManager.JollyCoop)
+            if (isExpeditionMode(out _) && ModManager.JollyCoop)
             {
                 self.jollyToggleConfigMenu.GetButtonBehavior.greyedOut = false;
                 self.jollyPlayerCountLabel.text = self.menu.Translate("Expedition-Players").Replace("<num_p>", Menu.Remix.ValueConverter.ConvertToString<int>(RWCustom.Custom.rainWorld.options.JollyPlayerCount));
@@ -117,7 +116,7 @@ namespace RainMeadow
         {
             orig(self);
 
-            if (ModManager.JollyCoop)
+            if (isExpeditionMode(out _) && ModManager.JollyCoop)
             {
                 self.jollyToggleConfigMenu.nextSelectable[1] = (self.menu as ExpeditionMenu).muteButton;
                 self.jollyToggleConfigMenu.nextSelectable[0] = (self.menu as ExpeditionMenu).muteButton;

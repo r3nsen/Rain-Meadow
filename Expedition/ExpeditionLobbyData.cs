@@ -140,22 +140,19 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
                 currentMenuSaveState = expeditionGameMode.menuSaveState;
                 hasSaveState = expeditionGameMode.hasSaveState;
             }
+           
+            int cclCount = currentChallengeList.Length;
 
-            if (ExpeditionOnlineMenu.expeditionGameMode is not null)
+            if (expeditionGameMode.isChallengeCompleted == null || expeditionGameMode.isChallengeCompleted.Length != cclCount)
             {
-                int cclCount = currentChallengeList.Length;
+                expeditionGameMode.isChallengeCompleted = new bool[cclCount];
+            }
 
-                if (ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted == null || ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted.Length != cclCount)
-                {
-                    ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted = new bool[cclCount];
-                }
+            isChallengeCompleted = new bool[cclCount];
 
-                isChallengeCompleted = new bool[cclCount];
-
-                for (int i = 0; i < cclCount; i++)
-                {
-                    isChallengeCompleted[i] = ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted[i] = currentChallengeList[i].completed;
-                }
+            for (int i = 0; i < cclCount; i++)
+            {
+                isChallengeCompleted[i] = expeditionGameMode.isChallengeCompleted[i] = currentChallengeList[i].completed;
             }
         }
 
@@ -292,10 +289,7 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
                 expedition.needMenuSaveUpdate = true;
             }
 
-            if (ExpeditionOnlineMenu.expeditionGameMode is not null)
-            {
-                ExpeditionOnlineMenu.expeditionGameMode.isChallengeCompleted = isChallengeCompleted;
-            }
+            expedition.isChallengeCompleted = isChallengeCompleted;
         }
 
         public ChallengeState GetChallengeState(Challenge challenge) // modders can hook this to custom challenges
