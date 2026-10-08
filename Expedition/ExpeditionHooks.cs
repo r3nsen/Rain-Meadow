@@ -54,6 +54,94 @@ namespace RainMeadow
             On.Menu.CharacterSelectPage.UpdateSelectedSlugcat += CharacterSelectPage_UpdateSelectedSlugcat;
             On.Menu.ExpeditionMenu.CommunicateWithUpcomingProcess += ExpeditionMenu_CommunicateWithUpcomingProcess;
             On.Menu.ExpeditionGameOver.Singal += ExpeditionGameOver_Singal;
+            IL.Menu.ExpeditionGameOver.ctor += ExpeditionGameOver_ctor;
+            IL.Menu.ExpeditionMenu.ValidateQuestRewards += ExpeditionMenu_ValidateQuestRewards;
+            IL.RainWorldGame.GoToDeathScreen += ExpeditionGameOver;
+        }
+
+        private void ExpeditionGameOver(ILContext il)
+        {
+            try
+            {
+                var c = new ILCursor(il);
+
+                // this.manager.RequestMainProcessSwitch(global::Expedition.ExpeditionEnums.ProcessID.ExpeditionGameOver);
+
+                c.GotoNext(MoveType.After,
+                    x => x.MatchLdsfld<ExpeditionEnums.ProcessID>(nameof(ExpeditionEnums.ProcessID.ExpeditionGameOver))
+                    );
+                c.EmitDelegate((ProcessManager.ProcessID ID) => {
+                    if (isExpeditionMode(out _))
+                    {
+                        return Ext_ProcessID.ExpeditionGameOver;
+                    }
+                    return ID;
+                });
+            }
+            catch (Exception e)
+            {
+                Error($"Error while IL hooking : {e}");
+            }
+
+        }
+
+        private void ExpeditionMenu_ValidateQuestRewards(ILContext il)
+        {
+            try
+            {
+                var c = new ILCursor(il);
+
+                // this.manager.RequestMainProcessSwitch(global::Expedition.ExpeditionEnums.ProcessID.ExpeditionMenu);
+
+                c.GotoNext(MoveType.After,
+                    x => x.MatchLdsfld<ExpeditionEnums.ProcessID>(nameof(ExpeditionEnums.ProcessID.ExpeditionMenu))
+                    );
+                c.EmitDelegate((ProcessManager.ProcessID ID) => {
+                    if (isExpeditionMode(out _))
+                    {
+                        return Ext_ProcessID.ExpeditionMenu;
+                    }
+                    return ID;
+                });
+            }
+            catch (Exception e) 
+            {
+                Error($"Error while IL hooking : {e}");
+            }
+        }
+
+        private void ExpeditionGameOver_ctor(ILContext il)
+        {
+            try
+            {
+                // Menu.HoldButton holdButton = new Menu.HoldButton(this, this.pages[0], base.Translate("RETRY<LINE>EXPEDITION").Replace("<LINE>", "\n"), "RETRY", new global::UnityEngine.Vector2(this.leftAnchor + 270f, 170f), 50f);
+
+                var c = new ILCursor(il);
+
+                var skip = c.DefineLabel();
+
+                c.GotoNext(MoveType.Before,
+                    x => x.MatchLdarg(0),
+                    x => x.MatchLdarg(0),
+                    x => x.MatchLdfld(out _),
+                    x => x.MatchLdcI4(0),
+                    x => x.MatchCallvirt(out _),
+                    x => x.MatchLdarg(0),
+                    x => x.MatchLdstr("RETRY<LINE>EXPEDITION")
+                    );
+
+                c.EmitDelegate(() => {
+                    return isExpeditionMode(out _);                    
+                });
+
+                c.Emit(OpCodes.Brfalse, skip);
+                c.Emit(OpCodes.Ret);
+                c.MarkLabel(skip);
+            }
+            catch (Exception e)
+            {
+                Error($"Error while IL hooking : {e}");
+            }
         }
 
         private void ExpeditionGameOver_Singal(On.Menu.ExpeditionGameOver.orig_Singal orig, ExpeditionGameOver self, MenuObject sender, string message)
