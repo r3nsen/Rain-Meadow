@@ -367,6 +367,10 @@ namespace RainMeadow
                 OpenColorConfig(PlayerSelectedSlugcat);
             }
 
+            if (message == "MISSION")
+            {
+                UpdateOnlinePage(2);
+            }
             if (message == "LEFT")
             {
                 if (currentPage == 3)
