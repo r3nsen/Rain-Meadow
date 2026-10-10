@@ -34,7 +34,7 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
         
         [OnlineField]
         bool hasSaveState;
-        
+
         [OnlineField]
         public byte readyForTransition;
 
@@ -52,6 +52,12 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
         
         [OnlineField]
         public bool validateQuests;
+
+        [OnlineField]
+        public bool friendlyFire;
+
+        [OnlineField]
+        public bool requireCampaignSlugcat;
 
         [OnlineField(nullable = true)]
         public string? activeMission;
@@ -98,31 +104,33 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
             saveStateString = expeditionGameMode.saveStateString;
             selectedSlugcat = expeditionGameMode.slugcatCampaingSelected;
             currentCampaign = expeditionGameMode.currentCampaign;
+            requireCampaignSlugcat = expeditionGameMode.requireCampaignSlugcat;
+            friendlyFire = expeditionGameMode.friendlyFire;
 
             if (currentCampaign is not null)
             {
-                if (ExpeditionOnlineMenu.challengeListStrings is null || 
-                    ExpeditionOnlineMenu.challengeListStrings.Count != ExpeditionData.allChallengeLists[currentCampaign].Count ||
-                    !ExpeditionOnlineMenu.challengeListStrings.SequenceEqual(ExpeditionData.allChallengeLists[currentCampaign].Select(x => x.ToString())))
+                if (expeditionGameMode.challengeListStrings is null ||
+                    expeditionGameMode.challengeListStrings.Count != ExpeditionData.allChallengeLists[currentCampaign].Count ||
+                    !expeditionGameMode.challengeListStrings.SequenceEqual(ExpeditionData.allChallengeLists[currentCampaign].Select(x => x.ToString())))
                 {
-                    ExpeditionOnlineMenu.challengeListStrings = ExpeditionData.allChallengeLists[currentCampaign].Select(x => x.ToString()).ToList();
+                    expeditionGameMode.challengeListStrings = ExpeditionData.allChallengeLists[currentCampaign].Select(x => x.ToString()).ToList();
 
                     List<ChallengeState> challengeStateList = new List<ChallengeState>();
                     foreach (Challenge challenge in ExpeditionData.allChallengeLists[currentCampaign])
                     {
                         challengeStateList.Add(GetChallengeState(challenge));
                     }
-                    ExpeditionOnlineMenu.currentChallengeList = challengeStateList.ToArray();
+                    expeditionGameMode.currentChallengeList = challengeStateList.ToArray();
                 }
             }
 
-            if (ExpeditionOnlineMenu.activeUnlocks is null || !ExpeditionGame.activeUnlocks.SequenceEqual(ExpeditionOnlineMenu.activeUnlocks))
+            if (expeditionGameMode.activeUnlocks is null || !ExpeditionGame.activeUnlocks.SequenceEqual(expeditionGameMode.activeUnlocks))
             {
-                ExpeditionOnlineMenu.activeUnlocks = new List<string>(ExpeditionGame.activeUnlocks);
+                expeditionGameMode.activeUnlocks = new List<string>(ExpeditionGame.activeUnlocks);
             }
 
-            currentChallengeList = ExpeditionOnlineMenu.currentChallengeList;
-            activeUnlocks = ExpeditionOnlineMenu.activeUnlocks;
+            currentChallengeList = expeditionGameMode.currentChallengeList;
+            activeUnlocks = expeditionGameMode.activeUnlocks;
             challengeDifficulty = ExpeditionData.challengeDifficulty;                
             newGame = ExpeditionData.newGame;
             validateQuests = ExpeditionData.validateQuests;
@@ -192,6 +200,8 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
             expedition.readyForWin = readyForWin;
             expedition.readyForTransition = (StoryGameMode.ReadyForTransition)readyForTransition;
             expedition.saveStateString = saveStateString;
+            expedition.requireCampaignSlugcat = requireCampaignSlugcat;
+            expedition.friendlyFire = friendlyFire;
 
             expedition.hasSaveState = hasSaveState;
 
@@ -206,8 +216,8 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
             ExpeditionData.validateQuests = validateQuests;
             ExpeditionData.activeMission = activeMission;
             ExpeditionData.startingDen = startingDen;
-            
-            ExpeditionOnlineMenu.activeUnlocks = activeUnlocks;                
+
+            expedition.activeUnlocks = activeUnlocks;                
 
             if (!ExpeditionGame.expeditionComplete)
             {
@@ -224,14 +234,10 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
 
                 List<Challenge> challenge = ExpeditionData.allChallengeLists[currentCampaign];
   
-                if (ExpeditionOnlineMenu.challengeListStrings is null || ExpeditionOnlineMenu.challengeListStrings.Count != currentChallengeList.Length)//challenge.Count)
+                if (expedition.challengeListStrings is null || expedition.challengeListStrings.Count != currentChallengeList.Length)
                 {
-                    string[] challengeStrings = new string[currentChallengeList.Length];
-                    //for (int i = 0; i < challenge.Count; i++) 
-                    //{
-                    //    challengeStrings[i] = challenge[i].ToString();
-                    //}
-                    ExpeditionOnlineMenu.challengeListStrings = new List<string>(challengeStrings);
+                    string[] challengeStrings = new string[currentChallengeList.Length];                   
+                    expedition.challengeListStrings = new List<string>(challengeStrings);
                 }
 
                 bool needUpdateeChallengePreview = false;
@@ -248,9 +254,9 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
 
                     currentChallengeList[i].ReadTo(challenge[i]);
 
-                    if (ExpeditionOnlineMenu.challengeListStrings[i] != challenge[i].ToString())
+                    if (expedition.challengeListStrings[i] != challenge[i].ToString())
                     {
-                        ExpeditionOnlineMenu.challengeListStrings[i] = challenge[i].ToString();
+                        expedition.challengeListStrings[i] = challenge[i].ToString();
                         needUpdate = true;
                         needUpdateeChallengePreview = true;
                     }
@@ -258,11 +264,7 @@ public class ExpeditionLobbyData : OnlineResource.ResourceData
                     if (needUpdate)
                     {
                         needUpdate = false;
-                        //if (RWCustom.Custom.rainWorld.processManager.currentMainLoop is RainWorldGame rwg)
-                        //{
-                        //    challenge[i].game = rwg;
-                        //}
-
+                       
                         bool newCompleteState = challenge[i].completed;
 
                         if (oldCompleteState != newCompleteState && newCompleteState)

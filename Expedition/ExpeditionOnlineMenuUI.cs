@@ -36,7 +36,6 @@ namespace RainMeadow
                 SetSelectedSlugcat(0, value);
             }
         }
-        //public List<SlugcatStats.Name> playableCharacters
 
         SimplerSymbolButton toggleChat;
         
@@ -57,13 +56,17 @@ namespace RainMeadow
 
         private ScrollSymbolButton colorConfigButton;
         private Dialog colorConfigDialog;
-        private CheckBox isPupCheckbox;
+        private MenuLabel colorConfigLabel;
+        
+        private CheckBox friendlyFire;
+        private CheckBox reqCampaignSlug;
+        private CheckBox syncSave;
 
         private bool _pagesMoving;
 
         void SetupOnlineMenuItens()
         {
-            lobbylabelPos = new Vector2(rightAnchor - 170, 553);
+            lobbylabelPos = new Vector2(rightAnchor - 160, 620);
             lobbyLabel = new MenuLabel(this, pages[_currentPage], Translate("LOBBY"), lobbylabelPos, new(110, 30), true);
             pages[_currentPage].subObjects.Add(lobbyLabel);
 
@@ -88,7 +91,7 @@ namespace RainMeadow
             playerScrollBox?.RemoveAllButtons(false);
             if (playerScrollBox == null)
             {
-                playerScrollBoxPos = new(rightAnchor - 170, 553 - 30 - ButtonScroller.CalculateHeightBasedOnAmtOfButtons(MaxVisibleOnList, ButtonSize, ButtonSpacingOffset));
+                playerScrollBoxPos = new(rightAnchor - 160, 620 - 30 - ButtonScroller.CalculateHeightBasedOnAmtOfButtons(MaxVisibleOnList, ButtonSize, ButtonSpacingOffset));
                 playerScrollBox = new(this, pages[_currentPage], playerScrollBoxPos, MaxVisibleOnList, 200, new(ButtonSize, ButtonSpacingOffset));
                 pages[_currentPage].subObjects.Add(playerScrollBox);
             }
@@ -111,6 +114,11 @@ namespace RainMeadow
         float offscreen = 0;
         private void UpdateUI()
         {
+            if (ModManager.JollyCoop)
+            {
+                expeditionGameMode.friendlyFire = manager.rainWorld.options.friendlyFire;
+            }
+
             if (this.pagesMoving || _pagesMoving)
             {
                 int usePagePos = (pagesMoving || !_pagesMoving) ? 1 : 0;
@@ -137,25 +145,35 @@ namespace RainMeadow
                 playerScrollBox.pos = playerScrollBoxPos - pagePos + makeOffscreen;
                 playerScrollBox.lastPos = playerScrollBoxPos - pageLastPos + makeOffscreen;
 
-                Vector2 slugcatLabelpos = new(leftAnchor + 70, 553);
+                Vector2 slugcatLabelpos = new(leftAnchor + 70, 620);
                 Vector2 slugcatSelectorpos = new(slugcatLabelpos.x, slugcatLabelpos.y - (ButtonSize * 2));
 
-                slugcatLabel.pos = slugcatLabelpos - pagePos - makeOffscreen;
-                slugcatLabel.lastPos = slugcatLabelpos - pageLastPos - makeOffscreen;
-                slugcatSelector.pos = slugcatSelectorpos - pagePos - makeOffscreen;
-                slugcatSelector.lastPos = slugcatSelectorpos - pageLastPos - makeOffscreen;
+                slugcatLabel?.pos = slugcatLabelpos - pagePos - makeOffscreen;
+                slugcatLabel?.lastPos = slugcatLabelpos - pageLastPos - makeOffscreen;
+                slugcatSelector?.pos = slugcatSelectorpos - pagePos - makeOffscreen;
+                slugcatSelector?.lastPos = slugcatSelectorpos - pageLastPos - makeOffscreen;
 
                 float restartTextWidth = GetRestartTextWidth(base.CurrLang);
                 
-                Vector2 pos = new(leftAnchor + 60 + restartTextWidth, 550 + 40);
+                Vector2 pos = new(rightAnchor - 110, 190 + 20);
 
-                colorConfigButton.pos = pos - pagePos - makeOffscreen;
-                colorConfigButton.lastPos = pos - pageLastPos - makeOffscreen;
-                
-                pos = new(leftAnchor + 20 + restartTextWidth, 520 + 70);
+                colorConfigButton?.pos = pos - pagePos + makeOffscreen;
+                colorConfigButton?.lastPos = pos - pageLastPos + makeOffscreen;
 
-                isPupCheckbox.pos = pos - pagePos - makeOffscreen;
-                isPupCheckbox.lastPos = pos - pageLastPos - makeOffscreen;
+                colorConfigLabel?.pos = pos + new Vector2(colorConfigButton.size.x / 2f, -20f) - pagePos + makeOffscreen;
+                colorConfigLabel?.lastPos = pos + new Vector2(colorConfigButton.size.x / 2f, -20f) - pageLastPos + makeOffscreen;
+
+                pos = new(rightAnchor - 60, 90);
+                syncSave?.pos = pos - pagePos + makeOffscreen;
+                syncSave?.lastPos = pos - pageLastPos + makeOffscreen;
+
+                pos = new(rightAnchor -60, 60);
+                friendlyFire.pos = pos - pagePos + makeOffscreen;
+                friendlyFire.lastPos = pos - pageLastPos + makeOffscreen;
+
+                pos = new(rightAnchor - 60, 30);
+                reqCampaignSlug.pos = pos - pagePos + makeOffscreen;
+                reqCampaignSlug.lastPos = pos - pageLastPos + makeOffscreen;
 
                 _pagesMoving = pagesMoving;
             }            
@@ -172,12 +190,18 @@ namespace RainMeadow
             playerScrollBox?.RemoveAllButtons(false);
             pages[currentPage].ClearMenuObject(ref playerScrollBox);
 
-            pages[currentPage].ClearMenuObject(ref colorConfigButton);            
-            pages[currentPage].ClearMenuObject(ref isPupCheckbox);
-            
-            RemoveSlugcatList();
+            pages[currentPage].ClearMenuObject(ref colorConfigButton);
+            pages[currentPage].ClearMenuObject(ref colorConfigLabel);
 
-            SetupSlugcatList();
+            pages[currentPage].ClearMenuObject(ref friendlyFire);
+            pages[currentPage].ClearMenuObject(ref reqCampaignSlug);
+            pages[currentPage].ClearMenuObject(ref syncSave);
+
+            if (!expeditionGameMode.requireCampaignSlugcat)
+            {
+                RemoveSlugcatList();
+                SetupSlugcatList();
+            }
 
             SetupOnlineMenuItens();
             UpdatePlayerList();
@@ -188,7 +212,7 @@ namespace RainMeadow
 
         private void SetupSlugcatList()
         {
-            Vector2 pos = new(leftAnchor + 70, 553);
+            Vector2 pos = new(leftAnchor + 70, 620);
             if (slugcatLabel == null)
             {
                 slugcatLabel = new(this, pages[_currentPage], Translate("Selected Slugcat").Replace("<LINE>", "\n"), pos, new(110, 30), true);
@@ -222,10 +246,10 @@ namespace RainMeadow
                     {
                         SelectableSlugcatsEnumerable = SelectableSlugcatsEnumerable.Append(MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Sofanthiel);
                     }
-                    //if (!SelectableSlugcatsEnumerable.Contains(MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Slugpup))
-                    //{
-                    //    SelectableSlugcatsEnumerable = SelectableSlugcatsEnumerable.Append(MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Slugpup);
-                    //}
+                    if (!SelectableSlugcatsEnumerable.Contains(MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Slugpup))
+                    {
+                        SelectableSlugcatsEnumerable = SelectableSlugcatsEnumerable.Append(MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Slugpup);
+                    }
                 }
                 if (ModManager.Watcher)
                 {
@@ -273,7 +297,6 @@ namespace RainMeadow
     {
         public bool colorChecked;
         public bool restartChecked;
-        //public CustomColorInterface colorInterface;
 
         public HorizontalSlider hueSlider;
         public HorizontalSlider satSlider;
@@ -282,19 +305,21 @@ namespace RainMeadow
         public SimpleButton defaultColorButton;
 
         public int activeColorChooser;
-        private bool slugpupChecked;
 
         public void SetupColorMenu()
         {            
-            if (ModManager.MMF)
+            if (ModManager.MMF && !ModManager.JollyCoop)
             {
-                Vector2 pos = new(leftAnchor + 60, 550);
+                Vector2 pos = new(rightAnchor - 110, 190 + 20);
 
                 float restartTextWidth = GetRestartTextWidth(base.CurrLang);
                 Futile.atlasManager.LogAllElementNames();
-                colorConfigButton = new(this, pages[_currentPage], "Meadow_Menu_BigColorBucket", "COLOR_SLUGCAT", pos + new Vector2(restartTextWidth, 40), new(45, 45));
-               
-                pages[_currentPage].subObjects.Add(colorConfigButton);               
+                
+                colorConfigButton = new(this, pages[_currentPage], "Meadow_Menu_BigColorBucket", "COLOR_SLUGCAT", pos + new Vector2(0, 0), new(45, 45));
+                colorConfigLabel = new MenuLabel(this, pages[_currentPage], Translate("Custom colors"), pos + new Vector2(colorConfigButton.size.x / 2f, -20f), Vector2.zero, false, null);
+
+                pages[_currentPage].subObjects.Add(colorConfigButton);
+                pages[_currentPage].subObjects.Add(colorConfigLabel);
             }
         }
 
@@ -333,46 +358,64 @@ namespace RainMeadow
             float restartTextWidth = GetRestartTextWidth(base.CurrLang);
             float restartTextOffset = GetRestartTextOffset(base.CurrLang);
 
-            Vector2 pos = new(leftAnchor + 20, 520);
+            Vector2 pos = new(rightAnchor - 60, 0);
+            if (!OnlineManager.lobby.isOwner)
+            {
+                syncSave = new CheckBox(this, pages[_currentPage], this, pos + new Vector2(0, 90), restartTextWidth, Translate("Sync Save"), "SYNCSAVE");
+                syncSave.label.pos.x += restartTextWidth - syncSave.label.label.textRect.width - 5f;
+                pages[_currentPage].subObjects.Add(syncSave);
+            }
 
-            isPupCheckbox = new CheckBox(this, pages[_currentPage], this, pos + new Vector2(restartTextWidth, 70), restartTextWidth, Translate("Slugpup"), "SLUGPUP");
-            isPupCheckbox.label.pos.x += restartTextWidth - isPupCheckbox.label.label.textRect.width - 5f;
-            isPupCheckbox.selectable = true;
-            pages[_currentPage].subObjects.Add(isPupCheckbox);
+            friendlyFire = new CheckBox(this, pages[_currentPage], this, pos + new Vector2(0, 60), restartTextWidth, Translate("Friendly Fire"), "ONLINEFRIENDLYFIRE");
+            friendlyFire.label.pos.x += restartTextWidth - friendlyFire.label.label.textRect.width - 5f;
+           
+            reqCampaignSlug = new CheckBox(this, pages[_currentPage], this, pos + new Vector2(0, 30), restartTextWidth, Translate("Require Campaign Slugcat"), "CAMPAIGNSLUGONLY");
+            reqCampaignSlug.label.pos.x += restartTextWidth - reqCampaignSlug.label.label.textRect.width - 5f;
+           
+            if (!OnlineManager.lobby.isOwner)
+            {
+                friendlyFire.buttonBehav.greyedOut = true;
+                reqCampaignSlug.buttonBehav.greyedOut = true;
+            }
+
+            pages[_currentPage].subObjects.Add(friendlyFire);
+            pages[_currentPage].subObjects.Add(reqCampaignSlug);
         }
 
         public bool GetChecked(CheckBox box)
         {
-            if (box.IDString == "COLORS")
+            if (box.IDString == "ONLINEFRIENDLYFIRE")
             {
-                return colorChecked;
+                return expeditionGameMode.friendlyFire;
             }
-            if (box.IDString == "SLUGPUP")
+            if (box.IDString == "CAMPAIGNSLUGONLY")
             {
-                return slugpupChecked;
+                return expeditionGameMode.requireCampaignSlugcat;
             }
-            else
+            if (box.IDString == "SYNCSAVE")
             {
-                RainMeadow.Debug($"GetChecked {box.IDString} not implemented");
-                return false;
+                return expeditionGameMode.saveToDisk;
             }
+            return false;
         }
 
         public void SetChecked(CheckBox box, bool c)
-        {        
-            if (box.IDString == "SLUGPUP")
+        {
+            if (box.IDString == "ONLINEFRIENDLYFIRE")
             {
-                slugpupChecked = c;
-                if (slugpupChecked)// && !CheckJollyCoopAvailable(colorFromIndex(slugcatPageIndex)))
-                {
-                    expeditionGameMode.avatarSettings[0].fakePup = true;
-                    ExpeditionOnlineCoreFIle.isPup = true;
-                }
-                else
-                {
-                    expeditionGameMode.avatarSettings[0].fakePup = false;
-                    ExpeditionOnlineCoreFIle.isPup = false;
-                }
+                if (ModManager.JollyCoop) manager.rainWorld.options.friendlyFire = c;
+                expeditionGameMode.friendlyFire = c;
+                return;
+            }
+            if (box.IDString == "CAMPAIGNSLUGONLY")
+            {
+                expeditionGameMode.requireCampaignSlugcat = c;
+                return;
+            }
+            if (box.IDString == "SYNCSAVE")
+            {
+                expeditionGameMode.saveToDisk = c;
+                return;
             }
         }
     }

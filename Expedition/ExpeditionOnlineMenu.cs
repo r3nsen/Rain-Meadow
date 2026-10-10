@@ -10,16 +10,8 @@ namespace RainMeadow
     public partial class ExpeditionOnlineMenu : ExpeditionMenu
     {
         ExpeditionGameMode expeditionGameMode;
-        public static List<string> activeUnlocks;
-        public static List<string> challengeListStrings;
-        public static ChallengeState[] currentChallengeList;
-
-        private CheckBox friendlyFire;
-        private CheckBox reqCampaignSlug;
+        
         private MenuLabel? lobbyLabel, slugcatLabel;
-
-        private bool jollyStarted;
-        private bool colorsChecked;
 
         bool isCurrentCampaignInitiallyNull = false;
 
@@ -62,9 +54,6 @@ namespace RainMeadow
             MatchmakingManager.OnPlayerListReceived += OnlineManager_OnPlayerListReceived;
 
             ChatTextBox.OnShutDownRequest += ResetChatInput;
-            
-            SetChecked(isPupCheckbox, ExpeditionOnlineCoreFIle.isPup);
-
         }
 
         public override void Update()
@@ -157,29 +146,29 @@ namespace RainMeadow
                     }
                 }
             }
-            
-            if (!jollyStarted && false)
+
+            if (expeditionGameMode.requireCampaignSlugcat)
             {
-                if (characterSelect != null)
+                RemoveSlugcatList();
+                for (int i = 0; i < playerSelectedSlugcats.Length; i++)
                 {
-                    jollyStarted = true;
-                    if (ModManager.JollyCoop)
+                    if (ModManager.JollyCoop && i < manager.rainWorld.options.jollyPlayerOptionsArray.Length)
                     {
-                        new Vector2(50f, characterSelect.menu.manager.rainWorld.screenSize.y - 100f);
-                        characterSelect.jollyToggleConfigMenu = new SymbolButton(characterSelect.menu, characterSelect, "coop", "JOLLY_TOGGLE_CONFIG", new UnityEngine.Vector2(440f, 550f));
-                        characterSelect.jollyToggleConfigMenu.roundedRect.size = new UnityEngine.Vector2(50f, 50f);
-                        characterSelect.jollyToggleConfigMenu.size = characterSelect.jollyToggleConfigMenu.roundedRect.size;
-                        characterSelect.subObjects.Add(characterSelect.jollyToggleConfigMenu);
-                        characterSelect.jollyPlayerCountLabel = new Menu.MenuLabel(characterSelect.menu, characterSelect, characterSelect.menu.Translate("Expedition-Players").Replace("<num_p>", Menu.Remix.ValueConverter.ConvertToString<int>(RWCustom.Custom.rainWorld.options.JollyPlayerCount)), characterSelect.jollyToggleConfigMenu.pos + new UnityEngine.Vector2(characterSelect.jollyToggleConfigMenu.size.x / 2f, -20f), UnityEngine.Vector2.zero, false, null);
-                        characterSelect.jollyPlayerCountLabel.label.color = new UnityEngine.Color(0.7f, 0.7f, 0.7f);
-                        characterSelect.subObjects.Add(characterSelect.jollyPlayerCountLabel);
+                        manager.rainWorld.options.jollyPlayerOptionsArray[i].playerClass = expeditionGameMode.currentCampaign;
                     }
+
+                    SetSelectedSlugcat(i, expeditionGameMode.currentCampaign);
                 }
             }
+            else
+            {
+                SetupSlugcatList();
+            }
 
-            SetupSlugcatList();
-
-            slugcatSelector.Slug = PlayerSelectedSlugcat;
+            if (slugcatSelector != null)
+            {
+                slugcatSelector.Slug = PlayerSelectedSlugcat;
+            }
 
         }
 
@@ -276,10 +265,8 @@ namespace RainMeadow
                     }
                     else
                     {
-                        // TODO: seperate custom colors for each avatar
-                        //RainMeadow.Debug($"currentColors: {expeditionGameMode.avatarSettings[i].currentColors} = expeditionGameMode.avatarSettings[{i}].playingAs: {expeditionGameMode.avatarSettings[i].playingAs}");
-                        expeditionGameMode.avatarSettings[i].currentColors = manager.rainWorld.progression.GetCustomColors(expeditionGameMode.avatarSettings[i].playingAs); //abt colors, color config updates to campaign when required campaign is on. Client side, the host still needs to be in the menu to update it so they will notice the color config update
-                        // expeditionGameMode.avatarSettings[i].fakePup = true;
+                        expeditionGameMode.avatarSettings[i].currentColors = manager.rainWorld.progression.GetCustomColors(expeditionGameMode.avatarSettings[i].playingAs);
+                        expeditionGameMode.avatarSettings[i].fakePup = false;
                     }
                 }
 
