@@ -1443,14 +1443,7 @@ namespace RainMeadow
             try
             {
                 ILCursor cursor = new(context);
-                cursor.EmitDelegate(() =>
-                {
-                    if (OnlineManager.lobby != null && isStoryMode(out var story))
-                    {
-                        if (!OnlineManager.lobby.isOwner) return;
-                        story.pups.Clear();
-                    }
-                });
+
                 cursor.GotoNext(x => x.MatchNewobj<FoodMeter>());
                 cursor.GotoPrev(MoveType.After, x => x.OpCode == OpCodes.Brfalse_S || x.OpCode == OpCodes.Brfalse);
 
@@ -1987,6 +1980,10 @@ namespace RainMeadow
                 if (storyGameMode.myLastWarp is not null)
                 {
                     self.warpPointTargetAfterWarpPointSave = storyGameMode.myLastWarp; // I think we should clear this on session ended to reset so incoming players arent' dropped at a portal
+                }
+                if (storyGameMode.pups is not null)
+                {
+                    storyGameMode.pups.Clear();
                 }
             }
             orig(self, game, survived, newMalnourished);
