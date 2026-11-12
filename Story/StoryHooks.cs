@@ -169,6 +169,14 @@ namespace RainMeadow
             };
 
             IL.AbstractRoom.RealizeRoom += DelayPupSpawn;
+            On.World.SpawnPupNPCs += World_SpawnPupNPCs;
+        }
+
+        private int World_SpawnPupNPCs(On.World.orig_SpawnPupNPCs orig, World self)
+        {
+            if (isStoryMode(out _) && !OnlineManager.lobby.isOwner) return 0;
+            return orig(self);
+
         }
 
         private void DelayPupSpawn(ILContext il)
