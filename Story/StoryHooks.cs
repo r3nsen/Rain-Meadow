@@ -170,13 +170,35 @@ namespace RainMeadow
 
             IL.AbstractRoom.RealizeRoom += DelayPupSpawn;
             On.World.SpawnPupNPCs += World_SpawnPupNPCs;
+            IL.Player.ctor += FixPupGate;
+        }
+
+        private void FixPupGate(ILContext il)
+        {
+            var c = new ILCursor(il);
+            var skip = c.DefineLabel();
+
+            // if (this.AI == null) --> if (this.AI == null && abstractCreature.abstractAI == null)
+
+            c.GotoNext(MoveType.After,
+                x => x.MatchBrfalse(out _),
+                x => x.MatchLdarg(0),
+                x => x.MatchCall<Player>("get_AI"),
+                x => x.MatchBrtrue(out skip));
+
+            c.Emit(OpCodes.Ldarg_1);
+
+            c.EmitDelegate((AbstractCreature abstractCreature) => {
+                if (isStoryMode(out _) && abstractCreature.abstractAI != null) return true;
+                return false;
+            });
+            c.Emit(OpCodes.Brtrue, skip);
         }
 
         private int World_SpawnPupNPCs(On.World.orig_SpawnPupNPCs orig, World self)
         {
             if (isStoryMode(out _) && !OnlineManager.lobby.isOwner) return 0;
             return orig(self);
-
         }
 
         private void DelayPupSpawn(ILContext il)
@@ -194,7 +216,6 @@ namespace RainMeadow
                     x => x.MatchCall<String>("op_Inequality"),
                     x => x.MatchBrfalse(out skip)
                     );
-
 
                 c.Emit(OpCodes.Ldarg_0);
                 c.Emit(OpCodes.Ldarg_1);
