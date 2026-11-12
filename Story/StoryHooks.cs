@@ -167,6 +167,63 @@ namespace RainMeadow
                     //throw; nonfatal
                 }
             };
+
+            IL.AbstractRoom.RealizeRoom += DelayPupSpawn;
+        }
+
+        private void DelayPupSpawn(ILContext il)
+        {
+            try
+            {
+                var c = new ILCursor(il);
+
+                var skip = c.DefineLabel();
+
+                // if (global::ModManager.MSC && this.shelter && (...) && this.name != game.GetStorySession.saveState.denPosition)
+
+                c.GotoNext(MoveType.After,
+                    x => x.MatchLdfld<SaveState>(nameof(SaveState.denPosition)),
+                    x => x.MatchCall<String>("op_Inequality"),
+                    x => x.MatchBrfalse(out skip)
+                    );
+
+
+                c.Emit(OpCodes.Ldarg_0);
+                c.Emit(OpCodes.Ldarg_1);
+
+                c.EmitDelegate((AbstractRoom self, World world) =>
+                {
+                    if (isStoryMode(out _))
+                    {
+                        StartCoroutine(SpawnPup(self, world));
+                        return true;
+                    }
+                    return false;
+                });
+
+                c.Emit(OpCodes.Brtrue, skip);
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e);
+            }
+        }
+
+        System.Collections.IEnumerator SpawnPup(AbstractRoom self, World world)
+        {
+            while (RoomSession.map.TryGetValue(self, out var _rs) && _rs.owner == null) yield return null;
+            if (!self.GetResource().isOwner) yield break;
+
+            WorldCoordinate worldCoordinate = new WorldCoordinate(self.index, -1, -1, 0);
+
+            AbstractCreature abstractCreature = new AbstractCreature(
+                world, StaticWorld.GetCreatureTemplate(MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC),
+                null, worldCoordinate, world.game.GetNewID()
+                );
+            self.AddEntity(abstractCreature);
+
+            ((MoreSlugcats.PlayerNPCState)abstractCreature.state).foodInStomach = 1;
+            world.game.GetStorySession.saveState.miscWorldSaveData.cyclesSinceLastSlugpup = 0;
         }
 
         // Always show "Sync Save" to clients
